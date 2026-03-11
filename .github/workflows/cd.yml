@@ -1,0 +1,54 @@
+name: CD — Deploy para Produção
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    name: Deploy VPS + Release Tag
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ── Gerar tag de release automática ───────────────────────────────────
+      - name: Get next version
+        id: version
+        run: |
+          LAST_TAG=$(git tag --sort=-version:refname | head -n1)
+          if [ -z "$LAST_TAG" ]; then
+            NEXT="release-0.0.1"
+          else
+            # Incrementa patch: release-0.0.1 → release-0.0.2
+            BASE=$(echo $LAST_TAG | sed 's/release-//')
+            PATCH=$(echo $BASE | cut -d. -f3)
+            MAJOR=$(echo $BASE | cut -d. -f1)
+            MINOR=$(echo $BASE | cut -d. -f2)
+            NEXT="release-${MAJOR}.${MINOR}.$((PATCH + 1))"
+          fi
+          echo "tag=$NEXT" >> $GITHUB_OUTPUT
+
+      - name: Create Release Tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag ${{ steps.version.outputs.tag }}
+          git push origin ${{ steps.version.outputs.tag }}
+
+      # ── Deploy na VPS via SSH ──────────────────────────────────────────────
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /opt/benedere
+            git pull origin main
+            docker compose pull
+            docker compose up -d --build api
+            docker compose exec api alembic upgrade head
+            echo "✅ Deploy ${{ steps.version.outputs.tag }} concluído"

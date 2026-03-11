@@ -1,0 +1,106 @@
+name: CI — Pull Request
+
+on:
+  pull_request:
+    branches: [dev, main]
+
+jobs:
+
+  # ── 1. Qualidade de Código ────────────────────────────────────────────────
+  lint:
+    name: Lint (flake8 + black + isort)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        run: pip install poetry==1.8.3
+
+      - name: Install dependencies
+        run: poetry install --no-interaction
+
+      - name: Run Black (formatação)
+        run: poetry run black --check app/ tests/
+
+      - name: Run isort (ordenação de imports)
+        run: poetry run isort --check-only app/ tests/
+
+      - name: Run Flake8 (estilo e bugs)
+        run: poetry run flake8 app/ tests/
+
+  # ── 2. Testes ────────────────────────────────────────────────────────────
+  test:
+    name: Tests + Coverage
+    runs-on: ubuntu-latest
+    needs: lint
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: benedere
+          POSTGRES_PASSWORD: benedere123
+          POSTGRES_DB: benedere_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://benedere:benedere123@localhost:5432/benedere_test
+      AUTH0_DOMAIN: test.auth0.com
+      AUTH0_AUDIENCE: https://api.benedere.com.br
+      DEBUG: "true"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        run: pip install poetry==1.8.3
+
+      - name: Install dependencies
+        run: poetry install --no-interaction
+
+      - name: Run tests with coverage
+        run: poetry run pytest
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml
+          path: coverage.xml
+
+  # ── 3. SonarQube ─────────────────────────────────────────────────────────
+  sonar:
+    name: SonarQube Analysis
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # SonarQube precisa do histórico completo
+
+      - name: Download coverage report
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-xml
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}  # URL da sua VPS
