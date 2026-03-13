@@ -11,6 +11,7 @@ from app.api.v1.schemas.ingrediente import (
     IngredienteResponse,
     IngredienteUpdateRequest,
 )
+from app.core.auth0 import get_tenant_id
 from app.domain.services.ingrediente_service import (
     IngredienteInativoError,
     IngredienteNaoEncontradoError,
@@ -28,11 +29,12 @@ router = APIRouter(prefix="/ingredientes", tags=["Ingredientes"])
 
 def get_ingrediente_service(
     session: AsyncSession = Depends(get_session),
-    x_tenant_id: uuid.UUID = Header(..., description="ID do tenant"),
+    tenant_id: str = Depends(get_tenant_id)
 ) -> IngredienteService:
-    ingrediente_repo = IngredienteRepository(session, tenant_id=x_tenant_id)
-    markup_repo = MarkupRepository(session, tenant_id=x_tenant_id)
-    return IngredienteService(ingrediente_repo, markup_repo, tenant_id=x_tenant_id)
+    _tenant_id = uuid.UUID(tenant_id)
+    ingrediente_repo = IngredienteRepository(session, tenant_id=_tenant_id)
+    markup_repo = MarkupRepository(session, tenant_id=_tenant_id)
+    return IngredienteService(ingrediente_repo, markup_repo, tenant_id=_tenant_id)
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────

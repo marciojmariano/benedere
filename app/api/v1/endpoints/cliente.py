@@ -11,6 +11,7 @@ from app.api.v1.schemas.cliente import (
     ClienteResponse,
     ClienteUpdateRequest,
 )
+from app.core.auth0 import get_tenant_id
 from app.domain.services.cliente_service import (
     ClienteInativoError,
     ClienteNaoEncontradoError,
@@ -28,11 +29,12 @@ router = APIRouter(prefix="/clientes", tags=["Clientes"])
 
 def get_cliente_service(
     session: AsyncSession = Depends(get_session),
-    x_tenant_id: uuid.UUID = Header(..., description="ID do tenant"),
+    tenant_id: str = Depends(get_tenant_id),
 ) -> ClienteService:
-    cliente_repo = ClienteRepository(session, tenant_id=x_tenant_id)
-    nutricionista_repo = NutricionistaRepository(session, tenant_id=x_tenant_id)
-    return ClienteService(cliente_repo, nutricionista_repo, tenant_id=x_tenant_id)
+    _tenant_id = uuid.UUID(tenant_id)
+    cliente_repo = ClienteRepository(session, tenant_id=_tenant_id)
+    nutricionista_repo = NutricionistaRepository(session, tenant_id=_tenant_id)
+    return ClienteService(cliente_repo, nutricionista_repo, tenant_id=_tenant_id)
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────

@@ -14,6 +14,7 @@ from app.api.v1.schemas.markup import (
     MarkupResponse,
     MarkupUpdateRequest,
 )
+from app.core.auth0 import get_tenant_id
 from app.domain.services.markup_service import (
     IndiceMarkupNaoEncontradoError,
     IndiceMarkupService,
@@ -32,19 +33,21 @@ markup_router = APIRouter(prefix="/markups", tags=["Markups"])
 
 def get_indice_service(
     session: AsyncSession = Depends(get_session),
-    x_tenant_id: uuid.UUID = Header(..., description="ID do tenant"),
+    tenant_id: str = Depends(get_tenant_id)
 ) -> IndiceMarkupService:
-    repo = IndiceMarkupRepository(session, tenant_id=x_tenant_id)
-    return IndiceMarkupService(repo, tenant_id=x_tenant_id)
+    _tenant_id = uuid.UUID(tenant_id)
+    repo = IndiceMarkupRepository(session, tenant_id=_tenant_id)
+    return IndiceMarkupService(repo, tenant_id=_tenant_id)
 
 
 def get_markup_service(
     session: AsyncSession = Depends(get_session),
-    x_tenant_id: uuid.UUID = Header(..., description="ID do tenant"),
-) -> MarkupService:
-    indice_repo = IndiceMarkupRepository(session, tenant_id=x_tenant_id)
-    markup_repo = MarkupRepository(session, tenant_id=x_tenant_id)
-    return MarkupService(markup_repo, indice_repo, tenant_id=x_tenant_id)
+    tenant_id: str = Depends(get_tenant_id)
+)-> MarkupService:
+    _tenant_id = uuid.UUID(tenant_id)
+    indice_repo = IndiceMarkupRepository(session, tenant_id=_tenant_id)
+    markup_repo = MarkupRepository(session, tenant_id=_tenant_id)
+    return MarkupService(markup_repo, indice_repo, tenant_id=_tenant_id)
 
 
 # ── Endpoints: IndiceMarkup ───────────────────────────────────────────────────

@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, status
 from fastapi.responses import FileResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.auth0 import get_tenant_id
 from app.infra.database.session import get_session
 from app.infra.repository.cliente_repository import ClienteRepository
 from app.infra.repository.nutricionista_repository import NutricionistaRepository
@@ -106,11 +107,12 @@ async def _montar_dados_pedido(pedido, orcamento, cliente, nutricionista) -> dic
 async def download_pdf_orcamento(
     orcamento_id: uuid.UUID,
     session: AsyncSession = Depends(get_session),
-    x_tenant_id: uuid.UUID = Header(...),
+    tenant_id: str = Depends(get_tenant_id)
 ):
-    orcamento_repo = OrcamentoRepository(session, tenant_id=x_tenant_id)
-    cliente_repo = ClienteRepository(session, tenant_id=x_tenant_id)
-    nutri_repo = NutricionistaRepository(session, tenant_id=x_tenant_id)
+    _tenant_id = uuid.UUID(tenant_id)
+    orcamento_repo = OrcamentoRepository(session, tenant_id=_tenant_id)
+    cliente_repo = ClienteRepository(session, tenant_id=_tenant_id)
+    nutri_repo = NutricionistaRepository(session, tenant_id=_tenant_id)
 
     orcamento = await orcamento_repo.get_by_id(orcamento_id)
     if not orcamento:
@@ -138,11 +140,12 @@ async def download_pdf_orcamento(
 async def salvar_pdf_orcamento(
     orcamento_id: uuid.UUID,
     session: AsyncSession = Depends(get_session),
-    x_tenant_id: uuid.UUID = Header(...),
+    tenant_id: str = Depends(get_tenant_id)
 ):
-    orcamento_repo = OrcamentoRepository(session, tenant_id=x_tenant_id)
-    cliente_repo = ClienteRepository(session, tenant_id=x_tenant_id)
-    nutri_repo = NutricionistaRepository(session, tenant_id=x_tenant_id)
+    _tenant_id = uuid.UUID(tenant_id)
+    orcamento_repo = OrcamentoRepository(session, tenant_id=_tenant_id)
+    cliente_repo = ClienteRepository(session, tenant_id=_tenant_id)
+    nutri_repo = NutricionistaRepository(session, tenant_id=_tenant_id)
 
     orcamento = await orcamento_repo.get_by_id(orcamento_id)
     if not orcamento:
@@ -157,7 +160,7 @@ async def salvar_pdf_orcamento(
     pdf_bytes = gerar_pdf_orcamento(dados)
 
     filename = f"{orcamento.numero}.pdf"
-    filepath = PDF_STORAGE_DIR / str(x_tenant_id) / filename
+    filepath = PDF_STORAGE_DIR / str(_tenant_id) / filename
     filepath.parent.mkdir(parents=True, exist_ok=True)
     filepath.write_bytes(pdf_bytes)
 
@@ -172,12 +175,13 @@ async def salvar_pdf_orcamento(
 async def download_pdf_pedido(
     pedido_id: uuid.UUID,
     session: AsyncSession = Depends(get_session),
-    x_tenant_id: uuid.UUID = Header(...),
+    tenant_id: str = Depends(get_tenant_id)
 ):
-    pedido_repo = PedidoRepository(session, tenant_id=x_tenant_id)
-    orcamento_repo = OrcamentoRepository(session, tenant_id=x_tenant_id)
-    cliente_repo = ClienteRepository(session, tenant_id=x_tenant_id)
-    nutri_repo = NutricionistaRepository(session, tenant_id=x_tenant_id)
+    _tenant_id = uuid.UUID(tenant_id)
+    pedido_repo = PedidoRepository(session, tenant_id=_tenant_id)
+    orcamento_repo = OrcamentoRepository(session, tenant_id=_tenant_id)
+    cliente_repo = ClienteRepository(session, tenant_id=_tenant_id)
+    nutri_repo = NutricionistaRepository(session, tenant_id=_tenant_id)
 
     pedido = await pedido_repo.get_by_id(pedido_id)
     if not pedido:
@@ -206,12 +210,13 @@ async def download_pdf_pedido(
 async def salvar_pdf_pedido(
     pedido_id: uuid.UUID,
     session: AsyncSession = Depends(get_session),
-    x_tenant_id: uuid.UUID = Header(...),
+    tenant_id: str = Depends(get_tenant_id)
 ):
-    pedido_repo = PedidoRepository(session, tenant_id=x_tenant_id)
-    orcamento_repo = OrcamentoRepository(session, tenant_id=x_tenant_id)
-    cliente_repo = ClienteRepository(session, tenant_id=x_tenant_id)
-    nutri_repo = NutricionistaRepository(session, tenant_id=x_tenant_id)
+    _tenant_id = uuid.UUID(tenant_id)
+    pedido_repo = PedidoRepository(session, tenant_id=_tenant_id)
+    orcamento_repo = OrcamentoRepository(session, tenant_id=_tenant_id)
+    cliente_repo = ClienteRepository(session, tenant_id=_tenant_id)
+    nutri_repo = NutricionistaRepository(session, tenant_id=_tenant_id)
 
     pedido = await pedido_repo.get_by_id(pedido_id)
     if not pedido:
@@ -227,7 +232,7 @@ async def salvar_pdf_pedido(
     pdf_bytes = gerar_pdf_pedido(dados)
 
     filename = f"{pedido.numero}.pdf"
-    filepath = PDF_STORAGE_DIR / str(x_tenant_id) / filename
+    filepath = PDF_STORAGE_DIR / str(_tenant_id) / filename
     filepath.parent.mkdir(parents=True, exist_ok=True)
     filepath.write_bytes(pdf_bytes)
 

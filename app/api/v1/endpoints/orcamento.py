@@ -11,6 +11,7 @@ from app.api.v1.schemas.orcamento import (
     OrcamentoResponse,
     OrcamentoUpdateRequest,
 )
+from app.core.auth0 import get_tenant_id
 from app.domain.services.orcamento_service import (
     ClienteNaoEncontradoError,
     IngredienteNaoEncontradoError,
@@ -33,14 +34,15 @@ router = APIRouter(prefix="/orcamentos", tags=["Orçamentos"])
 
 def get_orcamento_service(
     session: AsyncSession = Depends(get_session),
-    x_tenant_id: uuid.UUID = Header(..., description="ID do tenant"),
+    tenant_id: str = Depends(get_tenant_id)
 ) -> OrcamentoService:
-    return OrcamentoService(
-        orcamento_repo=OrcamentoRepository(session, tenant_id=x_tenant_id),
-        cliente_repo=ClienteRepository(session, tenant_id=x_tenant_id),
-        ingrediente_repo=IngredienteRepository(session, tenant_id=x_tenant_id),
-        markup_repo=MarkupRepository(session, tenant_id=x_tenant_id),
-        tenant_id=x_tenant_id,
+    _tenant_id = uuid.UUID(tenant_id)
+    return OrcamentoService(       
+        orcamento_repo=OrcamentoRepository(session, tenant_id=_tenant_id),
+        cliente_repo=ClienteRepository(session, tenant_id=_tenant_id),
+        ingrediente_repo=IngredienteRepository(session, tenant_id=_tenant_id),
+        markup_repo=MarkupRepository(session, tenant_id=_tenant_id),
+        tenant_id=_tenant_id,
     )
 
 

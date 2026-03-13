@@ -12,6 +12,7 @@ from app.api.v1.schemas.nutricionista import (
     NutricionistaResponse,
     NutricionistaUpdateRequest,
 )
+from app.core.auth0 import get_tenant_id
 from app.domain.services.nutricionista_service import (
     NutricionistaCRNJaExisteError,
     NutricionistaNaoEncontradoError,
@@ -28,14 +29,16 @@ router = APIRouter(prefix="/nutricionistas", tags=["Nutricionistas"])
 
 def get_nutricionista_service(
     session: AsyncSession = Depends(get_session),
-    x_tenant_id: uuid.UUID = Header(..., description="ID do tenant"),
+    tenant_id: str = Depends(get_tenant_id)
 ) -> NutricionistaService:
+    _tenant_id = uuid.UUID(tenant_id)
+
     """
     Provisório: tenant_id via header X-Tenant-ID.
     Será substituído pela extração do JWT Auth0 futuramente.
     """
-    repo = NutricionistaRepository(session, tenant_id=x_tenant_id)
-    return NutricionistaService(repo, tenant_id=x_tenant_id)
+    repo = NutricionistaRepository(session, tenant_id=_tenant_id)
+    return NutricionistaService(repo, tenant_id=_tenant_id)
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────

@@ -11,6 +11,7 @@ from app.api.v1.schemas.pedido import (
     PedidoResponse,
     PedidoUpdateRequest,
 )
+from app.core.auth0 import get_tenant_id
 from app.domain.services.pedido_service import (
     OrcamentoNaoAprovadoError,
     PedidoJaExisteError,
@@ -31,13 +32,14 @@ router = APIRouter(prefix="/pedidos", tags=["Pedidos"])
 
 def get_pedido_service(
     session: AsyncSession = Depends(get_session),
-    x_tenant_id: uuid.UUID = Header(..., description="ID do tenant"),
+    tenant_id: str = Depends(get_tenant_id)
 ) -> PedidoService:
+    _tenant_id = uuid.UUID(tenant_id)
     return PedidoService(
-        pedido_repo=PedidoRepository(session, tenant_id=x_tenant_id),
-        orcamento_repo=OrcamentoRepository(session, tenant_id=x_tenant_id),
-        ingrediente_repo=IngredienteRepository(session, tenant_id=x_tenant_id),
-        tenant_id=x_tenant_id,
+        pedido_repo=PedidoRepository(session, tenant_id=_tenant_id),
+        orcamento_repo=OrcamentoRepository(session, tenant_id=_tenant_id),
+        ingrediente_repo=IngredienteRepository(session, tenant_id=_tenant_id),
+        tenant_id=_tenant_id,
     )
 
 
