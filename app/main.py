@@ -4,6 +4,7 @@ from app.core.config import settings
 from app.api.v1.endpoints.tenant import router as tenant_router
 from app.api.v1.endpoints.nutricionista import router as nutricionista_router
 from app.api.v1.endpoints.cliente import router as cliente_router
+from app.api.v1.endpoints.markup import indice_router, markup_router
 
 
 app = FastAPI(
@@ -25,6 +26,8 @@ app.add_middleware(
 app.include_router(tenant_router, prefix="/api/v1")
 app.include_router(nutricionista_router, prefix="/api/v1")
 app.include_router(cliente_router, prefix="/api/v1")
+app.include_router(indice_router, prefix="/api/v1")
+app.include_router(markup_router, prefix="/api/v1")
 
 
 @app.get("/health", tags=["health"])
