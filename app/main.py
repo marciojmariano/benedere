@@ -6,6 +6,7 @@ from app.api.v1.endpoints.nutricionista import router as nutricionista_router
 from app.api.v1.endpoints.cliente import router as cliente_router
 from app.api.v1.endpoints.markup import indice_router, markup_router
 from app.api.v1.endpoints.ingrediente import router as ingrediente_router
+from app.api.v1.endpoints.orcamento import router as orcamento_router
 
 
 app = FastAPI(
@@ -30,6 +31,7 @@ app.include_router(cliente_router, prefix="/api/v1")
 app.include_router(indice_router, prefix="/api/v1")
 app.include_router(markup_router, prefix="/api/v1")
 app.include_router(ingrediente_router, prefix="/api/v1")
+app.include_router(orcamento_router, prefix="/api/v1")
 
 
 @app.get("/health", tags=["health"])
