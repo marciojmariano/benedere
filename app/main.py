@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.v1.endpoints.tenant import router as tenant_router
+from app.api.v1.endpoints.nutricionista import router as nutricionista_router
+
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -20,6 +22,7 @@ app.add_middleware(
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 app.include_router(tenant_router, prefix="/api/v1")
+app.include_router(nutricionista_router, prefix="/api/v1")
 
 
 @app.get("/health", tags=["health"])
