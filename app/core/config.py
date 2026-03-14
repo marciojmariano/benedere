@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     DB_NAME: str = "benedere_dev"
 
     # ── Auth0 ─────────────────────────────────────────────────────────────
-    AUTH0_DOMAIN: str = "your-domain.us.auth0.com"
+    AUTH0_DOMAIN: str = "dev-iy7ngjahohu3syvm.us.auth0.com"
     AUTH0_AUDIENCE: str = "https://api.benedere.com.br"
 
     # Declarados como str para evitar bug de parsing do pydantic-settings
@@ -42,7 +42,7 @@ class Settings(BaseSettings):
     AUTH0_ALGORITHMS: str = "RS256"
 
     # O .env aceita: http://localhost:3000  ou  http://localhost:3000,http://localhost:5173
-    ALLOWED_ORIGINS: str = "http://localhost:3000"
+    ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:5173, http://localhost:4200"
 
     # ── Propriedades computadas ───────────────────────────────────────────
 

@@ -23,6 +23,7 @@ NAMESPACE = "https://api.benedere.com.br"
 def _get_jwks() -> dict:
     """Busca as chaves públicas do Auth0 (cached)."""
     url = f"https://{settings.AUTH0_DOMAIN}/.well-known/jwks.json"
+    print(f"DEBUG BACKEND: Tentando acessar a URL: {url}") # <-- ADICIONE ISSO
     response = httpx.get(url, timeout=10)
     response.raise_for_status()
     return response.json()
@@ -56,7 +57,7 @@ def _get_signing_key(token: str) -> str:
 def _validar_token(token: str) -> dict:
     """Valida o JWT e retorna o payload."""
     signing_key = _get_signing_key(token)
-
+    print(f"DEBUG SIGNING KEY: {signing_key}")
     try:
         payload = jwt.decode(
             token,
@@ -67,6 +68,7 @@ def _validar_token(token: str) -> dict:
         )
         return payload
     except JWTError as e:
+        print(f"DEBUG JWT ERROR: {e}")  # ← adicione esta linha
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Token inválido: {str(e)}",
@@ -102,6 +104,16 @@ def get_tenant_id(
         )
     return payload.tenant_id
 
+def get_tenant_id(
+    payload: TokenPayload = Depends(get_token_payload),
+) -> str:
+    print(f"DEBUG TENANT PAYLOAD: {payload.raw}")
+    if not payload.tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="tenant_id não encontrado no token.",
+        )
+    return payload.tenant_id
 
 def get_current_user(
     payload: TokenPayload = Depends(get_token_payload),

@@ -41,6 +41,7 @@ line_length = 88
 asyncio_mode = "auto"
 testpaths = ["tests"]
 addopts = "--cov=app --cov-report=term-missing --cov-report=xml"
+pythonpath = ["."]
 
 [build-system]
 requires = ["poetry-core"]
