@@ -29,6 +29,9 @@ black = "^24.4.0"
 isort = "^5.13.0"
 flake8-bugbear = "^24.4.0"
 
+[tool.poe.tasks]
+dev = "uvicorn app.main:app --reload --host 0.0.0.0 --port 8000"
+
 [tool.black]
 line-length = 88
 target-version = ["py312"]
