@@ -16,6 +16,7 @@ class ClienteCreateRequest(BaseModel):
     endereco: str | None = None
     observacoes: str | None = None
     nutricionista_id: uuid.UUID | None = None
+    markup_id_padrao: uuid.UUID | None = None
 
     @field_validator("nome")
     @classmethod
@@ -45,6 +46,7 @@ class ClienteUpdateRequest(BaseModel):
     endereco: str | None = None
     observacoes: str | None = None
     nutricionista_id: uuid.UUID | None = None
+    markup_id_padrao: uuid.UUID | None = None
 
     @field_validator("nome")
     @classmethod
@@ -68,7 +70,7 @@ class ClienteResponse(BaseModel):
     observacoes: str | None
     ativo: bool
     nutricionista_id: uuid.UUID | None
+    markup_id_padrao: uuid.UUID | None = None
     created_at: datetime
     updated_at: datetime
-
     model_config = {"from_attributes": True}

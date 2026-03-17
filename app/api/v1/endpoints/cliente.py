@@ -57,6 +57,7 @@ async def criar_cliente(
             endereco=body.endereco,
             observacoes=body.observacoes,
             nutricionista_id=body.nutricionista_id,
+            markup_id_padrao=body.markup_id_padrao,
         )
     except NutricionistaNaoEncontradoError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
@@ -108,6 +109,7 @@ async def atualizar_cliente(
             endereco=body.endereco,
             observacoes=body.observacoes,
             nutricionista_id=body.nutricionista_id,
+            markup_id_padrao=body.markup_id_padrao,
         )
     except ClienteNaoEncontradoError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

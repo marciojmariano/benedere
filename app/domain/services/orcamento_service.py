@@ -15,6 +15,7 @@ from app.infra.repository.cliente_repository import ClienteRepository
 from app.infra.repository.ingrediente_repository import IngredienteRepository
 from app.infra.repository.markup_repository import MarkupRepository
 from app.infra.repository.orcamento_repository import OrcamentoRepository
+from app.infra.repository.tenant_repository import TenantRepository
 
 
 # ── Exceções ──────────────────────────────────────────────────────────────────
@@ -65,12 +66,14 @@ class OrcamentoService:
         cliente_repo: ClienteRepository,
         ingrediente_repo: IngredienteRepository,
         markup_repo: MarkupRepository,
+        tenant_repo: TenantRepository,
         tenant_id: uuid.UUID,
     ) -> None:
         self._orcamento_repo = orcamento_repo
         self._cliente_repo = cliente_repo
         self._ingrediente_repo = ingrediente_repo
         self._markup_repo = markup_repo
+        self._tenant_repo = tenant_repo
         self._tenant_id = tenant_id
 
     async def criar(
@@ -88,8 +91,18 @@ class OrcamentoService:
         if not cliente or not cliente.ativo:
             raise ClienteNaoEncontradoError(cliente_id)
 
+        # Resolve markup: prioridade → informado > cliente > tenant
+        if not markup_id:
+            if cliente.markup_id_padrao:
+                markup_id = cliente.markup_id_padrao
+            else:
+                # Busca markup padrão do tenant
+                tenant = await self._tenant_repo.get_by_id(self._tenant_id)
+                if tenant and tenant.markup_id_padrao:
+                    markup_id = tenant.markup_id_padrao
+
         # Valida markup total se informado
-        markup_fator_total = Decimal("1")
+        markup_fator_total = Decimal("1")  # ← deve vir DEPOIS da resolução do markup_id
         if markup_id:
             markup = await self._markup_repo.get_by_id(markup_id)
             if not markup or not markup.ativo:

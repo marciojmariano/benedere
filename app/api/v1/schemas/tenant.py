@@ -50,6 +50,7 @@ class TenantUpdateRequest(BaseModel):
     """Apenas campos editáveis pelo usuário."""
     nome: str | None = None
     email_dono: EmailStr | None = None
+    markup_id_padrao: uuid.UUID | None = None
 
     @field_validator("nome")
     @classmethod
@@ -73,8 +74,8 @@ class TenantResponse(BaseModel):
     email_dono: str
     plano: TenantPlano
     status: TenantStatus
+    markup_id_padrao: uuid.UUID | None = None
     created_at: datetime
-
     model_config = {"from_attributes": True}
 
 

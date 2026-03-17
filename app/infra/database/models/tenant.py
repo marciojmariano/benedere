@@ -1,18 +1,11 @@
 """Model: Tenant — raiz do multi-tenancy."""
 import uuid
-
-from sqlalchemy import Boolean, Enum, String
+from sqlalchemy import Boolean, Enum, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
-
 from app.infra.database.models.base import Base, TimestampMixin, TenantPlano, TenantStatus
 
-
 class Tenant(Base, TimestampMixin):
-    """
-    Cada empresa cliente do SaaS é um Tenant.
-    Não herda TenantScoped — ela É o tenant.
-    """
     __tablename__ = "tenants"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -28,3 +21,9 @@ class Tenant(Base, TimestampMixin):
         Enum(TenantStatus), nullable=False, default=TenantStatus.TRIAL
     )
     ativo: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    markup_id_padrao: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("markups.id", ondelete="SET NULL"),
+        nullable=True,
+        default=None,
+    )

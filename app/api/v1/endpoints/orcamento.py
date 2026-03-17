@@ -26,6 +26,7 @@ from app.infra.repository.cliente_repository import ClienteRepository
 from app.infra.repository.ingrediente_repository import IngredienteRepository
 from app.infra.repository.markup_repository import MarkupRepository
 from app.infra.repository.orcamento_repository import OrcamentoRepository
+from app.infra.repository.tenant_repository import TenantRepository
 
 router = APIRouter(prefix="/orcamentos", tags=["Orçamentos"])
 
@@ -42,6 +43,7 @@ def get_orcamento_service(
         cliente_repo=ClienteRepository(session, tenant_id=_tenant_id),
         ingrediente_repo=IngredienteRepository(session, tenant_id=_tenant_id),
         markup_repo=MarkupRepository(session, tenant_id=_tenant_id),
+        tenant_repo=TenantRepository(session),
         tenant_id=_tenant_id,
     )
 

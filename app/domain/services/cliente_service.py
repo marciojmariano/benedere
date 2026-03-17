@@ -49,6 +49,7 @@ class ClienteService:
         endereco: str | None = None,
         observacoes: str | None = None,
         nutricionista_id: uuid.UUID | None = None,
+        markup_id_padrao: uuid.UUID | None = None,
     ) -> Cliente:
         # Valida nutricionista se informado
         if nutricionista_id:
@@ -64,6 +65,7 @@ class ClienteService:
             endereco=endereco,
             observacoes=observacoes,
             nutricionista_id=nutricionista_id,
+            markup_id_padrao=markup_id_padrao,
             ativo=True,
         )
         return await self._cliente_repo.create(cliente)
@@ -86,6 +88,7 @@ class ClienteService:
         endereco: str | None = None,
         observacoes: str | None = None,
         nutricionista_id: uuid.UUID | None = None,
+        markup_id_padrao: uuid.UUID | None = None,
     ) -> Cliente:
         cliente = await self.buscar_por_id(cliente_id)
 
@@ -110,6 +113,10 @@ class ClienteService:
             cliente.observacoes = observacoes
         if nutricionista_id is not None:
             cliente.nutricionista_id = nutricionista_id
+
+
+        if markup_id_padrao is not None:
+            cliente.markup_id_padrao = markup_id_padrao
 
         cliente.updated_at = datetime.utcnow()
         return await self._cliente_repo.update(cliente)
