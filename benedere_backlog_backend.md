@@ -181,13 +181,6 @@
 
 ## Resumo Backend
 
-> **Apontamento de horas: 18/03/2026 - 23:30 - 23:59**
-> **Apontamento de horas: 19/03/2026 - 00:00 - 02:40 (56 SP)**
-
----
-
-> **Total de horas trabalhadas: 03:40**
-
 | Épico | Descrição | US | SP Total | SP Concluído | Progresso |
 |-------|-----------|:--:|--------:|------------:|----------:|
 | 1 | Nova modelagem de banco | 3 | 18 | 18 | 100% |
@@ -199,7 +192,12 @@
 
 > **Nota:** US 1.3 eliminada (−13 SP do total original de 134).
 
+## Apontamento de horas
 
+> **18/03/2026:  23:30 - 23:59 (00:30)**
+> **19/03/2026 - 00:00 - 02:40 (02:40)**
+---
+> **Total de horas trabalhadas: 03:10**
 ---
 
 ## Ordem de execução
