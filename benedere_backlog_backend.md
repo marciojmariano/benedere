@@ -17,7 +17,7 @@
 
 | # | Task | SP | Status |
 |---|------|----|--------|
-| 1.1.1 | Criar enum PostgreSQL `tipo_refeicao` (cafe_manha, lanche_manha, almoco, lanche_tarde, jantar) | 1 | [ ] Pendente |
+| 1.1.1 | Criar enum PostgreSQL `tipo_refeicao` (cafe_manha, lanche_manha, almoco, lanche_tarde, jantar) | 1 | [ ] Pendente | - [ ]
 | 1.1.2 | Criar migration: tabela `produto` (id, tenant_id, nome, tipo_refeicao, peso_total_g, ativo) | 2 | ⬜ Pendente |
 | 1.1.3 | Criar migration: tabela `produto_composicao` (id, produto_id, ingrediente_id, quantidade_g, ordem) | 2 | ⬜ Pendente |
 | 1.1.4 | Remover tabelas legadas `orcamento` e `orcamento_item` (migration de drop com backup de dados) | 3 | ⬜ Pendente |
