@@ -7,7 +7,8 @@ from app.api.v1.endpoints.cliente import router as cliente_router
 from app.api.v1.endpoints.markup import indice_router, markup_router
 from app.api.v1.endpoints.ingrediente import router as ingrediente_router
 from app.api.v1.endpoints.produto import router as produto_router
-# PDF temporariamente desabilitado — será reescrito no Épico 3 com o novo schema de Pedido
+from app.api.v1.endpoints.pedido import router as pedido_router
+# PDF temporariamente desabilitado — será reescrito com o novo schema de Pedido
 # from app.api.v1.endpoints.pdf import router as pdf_router
 
 
@@ -34,18 +35,10 @@ app.include_router(indice_router, prefix="/api/v1")
 app.include_router(markup_router, prefix="/api/v1")
 app.include_router(ingrediente_router, prefix="/api/v1")
 app.include_router(produto_router, prefix="/api/v1")
-# app.include_router(pdf_router, prefix="/api/v1")  # Reativar após Épico 3
+app.include_router(pedido_router, prefix="/api/v1")
+# app.include_router(pdf_router, prefix="/api/v1")
+
 
 @app.get("/health", tags=["health"])
 async def health_check():
     return {"status": "ok", "app": settings.APP_NAME}
-
-@app.get("/teste-auth")
-async def teste_auth():
-    from app.core.auth0 import get_token_payload, bearer_scheme
-    from app.core.config import settings
-    return {
-        "auto_error": bearer_scheme.auto_error,
-        "is_debug": settings.is_debug(),
-        "ambiente": settings.AMBIENTE,
-    }
