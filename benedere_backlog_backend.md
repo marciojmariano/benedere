@@ -182,7 +182,8 @@
 ## Resumo Backend
 
 > **Apontamento de horas: 18/03/2026 - 23:30 - 23:59**
-> **Apontamento de horas: 19/03/2026 - 00:00 - 02:40 (56 SP)** 
+> **Apontamento de horas: 19/03/2026 - 00:00 - 02:40 (56 SP)**
+> **Total de horas trabalhadas: 03:40**
 
 | Épico | Descrição | US | SP Total | SP Concluído | Progresso |
 |-------|-----------|:--:|--------:|------------:|----------:|
