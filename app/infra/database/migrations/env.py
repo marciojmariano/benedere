@@ -20,10 +20,11 @@ from app.infra.database.models import (  # noqa: F401
     Markup,
     MarkupIndice,
     Ingrediente,
-    Orcamento,
-    OrcamentoItem,
+    Produto,
+    ProdutoComposicao,
     Pedido,
     PedidoItem,
+    PedidoItemComposicao,
 )
 
 config = context.config

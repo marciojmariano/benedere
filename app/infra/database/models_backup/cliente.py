@@ -8,7 +8,7 @@ from app.infra.database.models.base import Base, TenantScoped
 
 if TYPE_CHECKING:
     from app.infra.database.models.nutricionista import Nutricionista
-    from app.infra.database.models.pedido import Pedido
+    from app.infra.database.models.orcamento import Orcamento
 
 class Cliente(Base, TenantScoped):
     __tablename__ = "clientes"
@@ -39,6 +39,6 @@ class Cliente(Base, TenantScoped):
     nutricionista: Mapped["Nutricionista | None"] = relationship(
         "Nutricionista", back_populates="clientes"
     )
-    pedidos: Mapped[list["Pedido"]] = relationship(
-        "Pedido", back_populates="cliente"
+    orcamentos: Mapped[list["Orcamento"]] = relationship(
+        "Orcamento", back_populates="cliente"
     )

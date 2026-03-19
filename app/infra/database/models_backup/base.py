@@ -42,7 +42,7 @@ class TenantScoped(TimestampMixin):
     )
 
 
-# ── Enums: Tenant ────────────────────────────────────────────────────────────
+# ── Enums ─────────────────────────────────────────────────────────────────────
 
 class TenantStatus(str, enum.Enum):
     ATIVO = "ativo"
@@ -58,8 +58,6 @@ class TenantPlano(str, enum.Enum):
     ENTERPRISE = "enterprise"
 
 
-# ── Enums: Ingrediente ───────────────────────────────────────────────────────
-
 class UnidadeMedida(str, enum.Enum):
     KG = "kg"
     G = "g"
@@ -68,10 +66,20 @@ class UnidadeMedida(str, enum.Enum):
     UNIDADE = "unidade"
 
 
-# ── Enums: Produto / Refeição ────────────────────────────────────────────────
+# ── Enums LEGADOS (manter até concluir migração de dados — Épico 1 US 1.3) ──
+
+class StatusOrcamento(str, enum.Enum):
+    RASCUNHO = "rascunho"
+    ENVIADO = "enviado"
+    APROVADO = "aprovado"
+    REPROVADO = "reprovado"
+    CANCELADO = "cancelado"
+
+
+# ── Enums NOVOS (Refatoração v2) ─────────────────────────────────────────────
 
 class TipoRefeicao(str, enum.Enum):
-    """Tipo de refeição — enum fixo no banco."""
+    """Tipo de refeição — enum fixo no banco (Task 1.1.1)."""
     CAFE_MANHA = "cafe_manha"
     LANCHE_MANHA = "lanche_manha"
     ALMOCO = "almoco"
@@ -79,10 +87,8 @@ class TipoRefeicao(str, enum.Enum):
     JANTAR = "jantar"
 
 
-# ── Enums: Pedido ────────────────────────────────────────────────────────────
-
 class StatusPedido(str, enum.Enum):
-    """Status do pedido unificado com máquina de estados."""
+    """Status do pedido unificado — substitui o fluxo Orçamento→Pedido (Task 1.2.4)."""
     RASCUNHO = "rascunho"
     APROVADO = "aprovado"
     EM_PRODUCAO = "em_producao"
@@ -91,6 +97,6 @@ class StatusPedido(str, enum.Enum):
 
 
 class TipoItem(str, enum.Enum):
-    """Tipo do item no pedido: série (catálogo) ou personalizado."""
+    """Tipo do item no pedido: série (catálogo) ou personalizado (Task 1.2.5)."""
     SERIE = "serie"
     PERSONALIZADO = "personalizado"

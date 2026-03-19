@@ -1,27 +1,27 @@
 """
 Autenticação Auth0 — validação de JWT e extração de tenant_id
+
+Em AMBIENTE=desenvolvimento sem token → usa tenant_id fixo de dev.
+Com token (qualquer ambiente) → valida normalmente via Auth0.
 """
 import httpx
 from functools import lru_cache
-from typing import Annotated
 
-from fastapi import Depends, Header, HTTPException, Security, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi import Depends, HTTPException, Request, status
 from jose import JWTError, jwt
 
 from app.core.config import settings
 
-# ── Bearer scheme ─────────────────────────────────────────────────────────────
-bearer_scheme = HTTPBearer()
-
 NAMESPACE = "https://api.benedere.com.br"
+
+# Tenant fixo pra desenvolvimento
+DEV_TENANT_ID = "5afc3d1d-055b-4c5a-8744-98ab532fa6c1"
 
 
 # ── JWKS (chaves públicas do Auth0) ───────────────────────────────────────────
 
 @lru_cache(maxsize=1)
 def _get_jwks() -> dict:
-    """Busca as chaves públicas do Auth0 (cached)."""
     url = f"https://{settings.AUTH0_DOMAIN}/.well-known/jwks.json"
     response = httpx.get(url, timeout=10)
     response.raise_for_status()
@@ -29,7 +29,6 @@ def _get_jwks() -> dict:
 
 
 def _get_signing_key(token: str) -> str:
-    """Extrai a chave de assinatura correta do JWKS baseado no kid do token."""
     try:
         unverified_header = jwt.get_unverified_header(token)
     except JWTError:
@@ -54,9 +53,7 @@ def _get_signing_key(token: str) -> str:
 # ── Validação do token ────────────────────────────────────────────────────────
 
 def _validar_token(token: str) -> dict:
-    """Valida o JWT e retorna o payload."""
     signing_key = _get_signing_key(token)
-    print(f"DEBUG SIGNING KEY: {signing_key}")
     try:
         payload = jwt.decode(
             token,
@@ -84,11 +81,37 @@ class TokenPayload:
         self.raw: dict = payload
 
 
-def get_token_payload(
-    credentials: HTTPAuthorizationCredentials = Security(bearer_scheme),
-) -> TokenPayload:
-    """Valida o Bearer token e retorna o payload."""
-    return TokenPayload(_validar_token(credentials.credentials))
+def _extract_bearer_token(request: Request) -> str | None:
+    """Extrai o token Bearer do header Authorization manualmente."""
+    auth_header = request.headers.get("authorization")
+    if not auth_header:
+        return None
+    parts = auth_header.split()
+    if len(parts) == 2 and parts[0].lower() == "bearer":
+        return parts[1]
+    return None
+
+
+def get_token_payload(request: Request) -> TokenPayload:
+    """
+    Extrai e valida o token do header Authorization.
+    Em dev sem token → retorna payload fake com tenant_id fixo.
+    """
+    token = _extract_bearer_token(request)
+
+    if token is None:
+        if settings.is_debug():
+            return TokenPayload({
+                "sub": "dev|local",
+                f"{NAMESPACE}/tenant_id": DEV_TENANT_ID,
+                "email": "dev@benedere.local",
+            })
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token não fornecido",
+        )
+
+    return TokenPayload(_validar_token(token))
 
 
 def get_tenant_id(
@@ -102,15 +125,6 @@ def get_tenant_id(
         )
     return payload.tenant_id
 
-def get_tenant_id(
-    payload: TokenPayload = Depends(get_token_payload),
-) -> str:
-    if not payload.tenant_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="tenant_id não encontrado no token.",
-        )
-    return payload.tenant_id
 
 def get_current_user(
     payload: TokenPayload = Depends(get_token_payload),
