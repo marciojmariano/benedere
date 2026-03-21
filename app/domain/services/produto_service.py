@@ -74,7 +74,7 @@ class ProdutoService:
         if composicao:
             await self._salvar_composicao(produto.id, composicao)
             produto = await self._recalcular_peso(produto)
-
+        
         return produto
 
     async def buscar_por_id(self, produto_id: uuid.UUID) -> Produto:

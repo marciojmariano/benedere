@@ -6,8 +6,6 @@ import uuid
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-
-from app.api.v1.endpoints import markup
 from app.infra.database.models.markup import IndiceMarkup, Markup, MarkupIndice
 
 

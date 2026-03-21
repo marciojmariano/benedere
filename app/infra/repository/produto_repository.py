@@ -23,7 +23,7 @@ class ProdutoRepository:
     async def create(self, produto: Produto) -> Produto:
         self._session.add(produto)
         await self._session.flush()
-        await self._session.refresh(produto)
+        await self._session.refresh(produto) 
         return produto
 
     async def get_by_id(self, produto_id: uuid.UUID) -> Produto | None:
