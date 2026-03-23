@@ -422,7 +422,10 @@ class PedidoService:
 
     async def _recalcular_valor_total(self, pedido: Pedido) -> None:
         """Recalcula valor_total pela soma dos preco_total de todos os itens."""
-        # Recarrega o pedido com itens
+        # Flush garante que itens pendentes estão no DB antes da re-leitura
+        await self._session_flush()
+        # Expira a relação para forçar o selectinload a recarregar do DB
+        self._pedido_repo._session.expire(pedido, ['itens'])
         pedido_atualizado = await self._pedido_repo.get_by_id(pedido.id)
         if pedido_atualizado:
             total = sum(Decimal(str(item.preco_total)) for item in pedido_atualizado.itens)

@@ -116,7 +116,7 @@ async def listar_pedidos(
             cliente_id=p.cliente_id,
             status=p.status,
             valor_total=p.valor_total,
-            total_itens=0,
+            total_itens=len(p.itens),
             created_at=p.created_at,
         )
         for p in pedidos
