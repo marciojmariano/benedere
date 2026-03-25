@@ -6,7 +6,7 @@ from sqlalchemy import Boolean, Enum, ForeignKey, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.infra.database.models.base import Base, TenantScoped, UnidadeMedida
+from app.infra.database.models.base import Base, TenantScoped, TipoIngrediente, UnidadeMedida
 
 if TYPE_CHECKING:
     from app.infra.database.models.markup import Markup
@@ -23,6 +23,9 @@ class Ingrediente(Base, TenantScoped):
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
     nome: Mapped[str] = mapped_column(String(255), nullable=False)
+    tipo: Mapped[TipoIngrediente] = mapped_column(
+        Enum(TipoIngrediente), nullable=False, default=TipoIngrediente.INSUMO, server_default="insumo"
+    )
     unidade_medida: Mapped[UnidadeMedida] = mapped_column(
         Enum(UnidadeMedida), nullable=False
     )

@@ -7,13 +7,14 @@ from decimal import Decimal
 
 from pydantic import BaseModel, field_validator
 
-from app.infra.database.models.base import UnidadeMedida
+from app.infra.database.models.base import TipoIngrediente, UnidadeMedida
 
 
 # ── Requests ──────────────────────────────────────────────────────────────────
 
 class IngredienteCreateRequest(BaseModel):
     nome: str
+    tipo: TipoIngrediente = TipoIngrediente.INSUMO
     unidade_medida: UnidadeMedida
     custo_unitario: Decimal
     descricao: str | None = None
@@ -39,6 +40,7 @@ class IngredienteCreateRequest(BaseModel):
 
 class IngredienteUpdateRequest(BaseModel):
     nome: str | None = None
+    tipo: TipoIngrediente | None = None
     unidade_medida: UnidadeMedida | None = None
     custo_unitario: Decimal | None = None
     descricao: str | None = None
@@ -69,6 +71,7 @@ class IngredienteUpdateRequest(BaseModel):
 class IngredienteResponse(BaseModel):
     id: uuid.UUID
     nome: str
+    tipo: TipoIngrediente
     unidade_medida: UnidadeMedida
     custo_unitario: Decimal
     descricao: str | None

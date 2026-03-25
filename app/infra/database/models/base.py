@@ -60,6 +60,11 @@ class TenantPlano(str, enum.Enum):
 
 # ── Enums: Ingrediente ───────────────────────────────────────────────────────
 
+class TipoIngrediente(str, enum.Enum):
+    INSUMO = "insumo"
+    EMBALAGEM = "embalagem"
+
+
 class UnidadeMedida(str, enum.Enum):
     KG = "kg"
     G = "g"

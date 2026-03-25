@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 
-from app.infra.database.models.base import UnidadeMedida
+from app.infra.database.models.base import TipoIngrediente, UnidadeMedida
 from app.infra.database.models.ingrediente import Ingrediente
 from app.infra.repository.ingrediente_repository import IngredienteRepository
 from app.infra.repository.markup_repository import MarkupRepository
@@ -47,6 +47,7 @@ class IngredienteService:
         nome: str,
         unidade_medida: UnidadeMedida,
         custo_unitario: Decimal,
+        tipo: TipoIngrediente = TipoIngrediente.INSUMO,
         descricao: str | None = None,
         markup_id: uuid.UUID | None = None,
     ) -> Ingrediente:
@@ -59,6 +60,7 @@ class IngredienteService:
         ingrediente = Ingrediente(
             tenant_id=self._tenant_id,
             nome=nome,
+            tipo=tipo,
             unidade_medida=unidade_medida,
             custo_unitario=custo_unitario,
             descricao=descricao,
@@ -80,6 +82,7 @@ class IngredienteService:
         self,
         ingrediente_id: uuid.UUID,
         nome: str | None = None,
+        tipo: TipoIngrediente | None = None,
         unidade_medida: UnidadeMedida | None = None,
         custo_unitario: Decimal | None = None,
         descricao: str | None = None,
@@ -98,6 +101,8 @@ class IngredienteService:
 
         if nome is not None:
             ingrediente.nome = nome
+        if tipo is not None:
+            ingrediente.tipo = tipo
         if unidade_medida is not None:
             ingrediente.unidade_medida = unidade_medida
         if custo_unitario is not None:

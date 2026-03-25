@@ -86,6 +86,9 @@ class PedidoItemResponse(BaseModel):
     preco_unitario: Decimal
     preco_total: Decimal
     composicao: list[PedidoItemComposicaoResponse] = []
+    embalagem_ingrediente_id: uuid.UUID | None = None
+    embalagem_nome_snapshot: str | None = None
+    embalagem_custo_snapshot: Decimal | None = None
 
     model_config = {"from_attributes": True}
 

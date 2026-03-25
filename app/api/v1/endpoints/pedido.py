@@ -40,6 +40,7 @@ from app.infra.repository.ingrediente_repository import IngredienteRepository
 from app.infra.repository.markup_repository import MarkupRepository
 from app.infra.repository.cliente_repository import ClienteRepository
 from app.infra.repository.tenant_repository import TenantRepository
+from app.infra.repository.faixa_peso_embalagem_repository import FaixaPesoEmbalagemRepository
 
 router = APIRouter(prefix="/pedidos", tags=["Pedidos"])
 
@@ -59,6 +60,7 @@ def get_pedido_service(
         markup_repo=MarkupRepository(session, tenant_id=_tenant_id),
         cliente_repo=ClienteRepository(session, tenant_id=_tenant_id),
         tenant_repo=TenantRepository(session),
+        faixa_repo=FaixaPesoEmbalagemRepository(session, tenant_id=_tenant_id),
         tenant_id=_tenant_id,
     )
 

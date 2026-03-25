@@ -52,6 +52,7 @@ async def criar_ingrediente(
     try:
         return await service.criar(
             nome=body.nome,
+            tipo=body.tipo,
             unidade_medida=body.unidade_medida,
             custo_unitario=body.custo_unitario,
             descricao=body.descricao,
@@ -102,6 +103,7 @@ async def atualizar_ingrediente(
         return await service.atualizar(
             ingrediente_id=ingrediente_id,
             nome=body.nome,
+            tipo=body.tipo,
             unidade_medida=body.unidade_medida,
             custo_unitario=body.custo_unitario,
             descricao=body.descricao,

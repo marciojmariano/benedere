@@ -17,6 +17,7 @@ from app.infra.repository.ingrediente_repository import IngredienteRepository
 from app.infra.repository.markup_repository import MarkupRepository
 from app.infra.repository.cliente_repository import ClienteRepository
 from app.infra.repository.tenant_repository import TenantRepository
+from app.infra.repository.faixa_peso_embalagem_repository import FaixaPesoEmbalagemRepository
 
 
 # ── Exceções ──────────────────────────────────────────────────────────────────
@@ -90,6 +91,7 @@ class PedidoService:
         markup_repo: MarkupRepository,
         cliente_repo: ClienteRepository,
         tenant_repo: TenantRepository,
+        faixa_repo: FaixaPesoEmbalagemRepository,
         tenant_id: uuid.UUID,
     ) -> None:
         self._pedido_repo = pedido_repo
@@ -99,6 +101,7 @@ class PedidoService:
         self._markup_repo = markup_repo
         self._cliente_repo = cliente_repo
         self._tenant_repo = tenant_repo
+        self._faixa_repo = faixa_repo
         self._tenant_id = tenant_id
 
     # ── CRUD Pedido ──────────────────────────────────────────────────────────
@@ -251,6 +254,13 @@ class PedidoService:
             item.preco_unitario = float(custo_total * markup_fator)
             item.composicao = composicao_items
 
+            # Re-resolve embalagem pelo novo peso
+            peso_total_g = sum(float(c.quantidade_g) for c in composicao_items)
+            embalagem = await self._resolver_embalagem(peso_total_g)
+            item.embalagem_ingrediente_id = embalagem[0] if embalagem else None
+            item.embalagem_nome_snapshot = embalagem[1] if embalagem else None
+            item.embalagem_custo_snapshot = embalagem[2] if embalagem else None
+
         if quantidade is not None:
             item.quantidade = quantidade
 
@@ -317,6 +327,10 @@ class PedidoService:
         # tipo_refeicao: usa override se fornecido, senão herda do catálogo
         tipo_refeicao = tipo_refeicao_override or produto.tipo_refeicao
 
+        # Resolve embalagem pelo peso total dos ingredientes
+        peso_total_g = sum(float(c.quantidade_g) for c in composicao_snapshot)
+        embalagem = await self._resolver_embalagem(peso_total_g)
+
         item = PedidoItem(
             pedido_id=pedido.id,
             produto_id=produto.id,
@@ -327,6 +341,9 @@ class PedidoService:
             preco_unitario=float(preco_unitario),
             preco_total=float(preco_total),
             composicao=composicao_snapshot,
+            embalagem_ingrediente_id=embalagem[0] if embalagem else None,
+            embalagem_nome_snapshot=embalagem[1] if embalagem else None,
+            embalagem_custo_snapshot=embalagem[2] if embalagem else None,
         )
         return item
 
@@ -353,6 +370,10 @@ class PedidoService:
         preco_unitario = custo_total * markup_fator
         preco_total = preco_unitario * quantidade
 
+        # Resolve embalagem pelo peso total dos ingredientes
+        peso_total_g = sum(float(c.quantidade_g) for c in composicao_items)
+        embalagem = await self._resolver_embalagem(peso_total_g)
+
         item = PedidoItem(
             pedido_id=pedido.id,
             produto_id=None,
@@ -363,6 +384,9 @@ class PedidoService:
             preco_unitario=float(preco_unitario),
             preco_total=float(preco_total),
             composicao=composicao_items,
+            embalagem_ingrediente_id=embalagem[0] if embalagem else None,
+            embalagem_nome_snapshot=embalagem[1] if embalagem else None,
+            embalagem_custo_snapshot=embalagem[2] if embalagem else None,
         )
         return item
 
@@ -390,6 +414,16 @@ class PedidoService:
         return items
 
     # ── Helpers ──────────────────────────────────────────────────────────────
+
+    async def _resolver_embalagem(
+        self, peso_total_g: float
+    ) -> tuple[uuid.UUID, str, float] | None:
+        """Busca a faixa de peso correspondente e retorna (id, nome, custo) da embalagem."""
+        faixa = await self._faixa_repo.buscar_por_peso(peso_total_g)
+        if not faixa:
+            return None
+        ing = faixa.ingrediente_embalagem
+        return (ing.id, ing.nome, float(ing.custo_unitario))
 
     async def _resolver_markup(self, markup_id: uuid.UUID | None, cliente) -> uuid.UUID | None:
         """Cadeia: parâmetro → cliente.markup_id_padrao → tenant.markup_id_padrao → null."""
@@ -428,7 +462,11 @@ class PedidoService:
         self._pedido_repo._session.expire(pedido, ['itens'])
         pedido_atualizado = await self._pedido_repo.get_by_id(pedido.id)
         if pedido_atualizado:
-            total = sum(Decimal(str(item.preco_total)) for item in pedido_atualizado.itens)
+            total = sum(
+                Decimal(str(item.preco_total)) +
+                (Decimal(str(item.embalagem_custo_snapshot or 0)) * item.quantidade)
+                for item in pedido_atualizado.itens
+            )
             pedido_atualizado.valor_total = float(total)
             pedido_atualizado.updated_at = datetime.utcnow()
             await self._pedido_repo.update(pedido_atualizado)
