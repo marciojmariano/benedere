@@ -98,6 +98,8 @@ class IndiceMarkupService:
 
     async def desativar(self, indice_id: uuid.UUID) -> None:
         indice = await self.buscar_por_id(indice_id)
+        if await self._repo.is_used_by_active_markups(indice_id):
+            raise IndiceEmUsoError()
         await self._repo.delete(indice)
 
 

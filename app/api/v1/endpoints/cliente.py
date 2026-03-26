@@ -13,6 +13,7 @@ from app.api.v1.schemas.cliente import (
 )
 from app.core.auth0 import get_tenant_id
 from app.domain.services.cliente_service import (
+    ClienteEmUsoError,
     ClienteInativoError,
     ClienteNaoEncontradoError,
     ClienteService,
@@ -147,3 +148,5 @@ async def desativar_cliente(
         await service.desativar(cliente_id)
     except ClienteNaoEncontradoError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except ClienteEmUsoError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))

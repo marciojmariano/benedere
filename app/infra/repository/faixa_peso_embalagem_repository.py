@@ -24,7 +24,7 @@ class FaixaPesoEmbalagemRepository:
     async def create(self, faixa: FaixaPesoEmbalagem) -> FaixaPesoEmbalagem:
         self._session.add(faixa)
         await self._session.flush()
-        await self._session.refresh(faixa)
+        await self._session.refresh(faixa, ['ingrediente_embalagem'])
         return faixa
 
     async def get_by_id(self, faixa_id: uuid.UUID) -> FaixaPesoEmbalagem | None:
@@ -47,7 +47,7 @@ class FaixaPesoEmbalagemRepository:
 
     async def update(self, faixa: FaixaPesoEmbalagem) -> FaixaPesoEmbalagem:
         await self._session.flush()
-        await self._session.refresh(faixa)
+        await self._session.refresh(faixa, ['ingrediente_embalagem'])
         return faixa
 
     async def delete(self, faixa: FaixaPesoEmbalagem) -> None:

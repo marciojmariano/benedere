@@ -13,6 +13,7 @@ from app.api.v1.schemas.ingrediente import (
 )
 from app.core.auth0 import get_tenant_id
 from app.domain.services.ingrediente_service import (
+    IngredienteEmUsoError,
     IngredienteInativoError,
     IngredienteNaoEncontradoError,
     IngredienteService,
@@ -145,3 +146,5 @@ async def desativar_ingrediente(
         await service.desativar(ingrediente_id)
     except IngredienteNaoEncontradoError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except IngredienteEmUsoError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))

@@ -1,5 +1,6 @@
 """Model: Ingrediente."""
 import uuid
+from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, Enum, ForeignKey, Numeric, String, Text
@@ -24,7 +25,7 @@ class Ingrediente(Base, TenantScoped):
     )
     nome: Mapped[str] = mapped_column(String(255), nullable=False)
     tipo: Mapped[TipoIngrediente] = mapped_column(
-        Enum(TipoIngrediente), nullable=False, default=TipoIngrediente.INSUMO, server_default="insumo"
+        Enum(TipoIngrediente), nullable=False, default=TipoIngrediente.INSUMO, server_default="INSUMO"
     )
     unidade_medida: Mapped[UnidadeMedida] = mapped_column(
         Enum(UnidadeMedida), nullable=False
@@ -34,6 +35,9 @@ class Ingrediente(Base, TenantScoped):
     )
     descricao: Mapped[str | None] = mapped_column(Text, nullable=True)
     ativo: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    saldo_atual: Mapped[Decimal] = mapped_column(
+        Numeric(12, 4), nullable=False, server_default="0", default=Decimal("0")
+    )
 
     # Markup específico do ingrediente (opcional)
     markup_id: Mapped[uuid.UUID | None] = mapped_column(

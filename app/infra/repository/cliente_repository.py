@@ -4,11 +4,13 @@ Todo acesso filtrado por tenant_id.
 """
 import uuid
 
-from sqlalchemy import select
+from sqlalchemy import select, exists
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.infra.database.models.cliente import Cliente
+from app.infra.database.models.pedido import Pedido
+from app.infra.database.models.base import StatusPedido
 
 
 class ClienteRepository:
@@ -46,6 +48,16 @@ class ClienteRepository:
         await self._session.flush()
         await self._session.refresh(cliente)
         return cliente
+
+    async def has_active_pedidos(self, cliente_id: uuid.UUID) -> bool:
+        """Retorna True se o cliente possui pedidos não-cancelados."""
+        result = await self._session.execute(
+            select(exists().where(
+                Pedido.cliente_id == cliente_id,
+                Pedido.status != StatusPedido.CANCELADO,
+            ))
+        )
+        return bool(result.scalar())
 
     async def delete(self, cliente: Cliente) -> None:
         """Soft delete."""

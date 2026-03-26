@@ -3,7 +3,7 @@ Repository: IndiceMarkup e Markup
 """
 import uuid
 
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, exists
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from app.infra.database.models.markup import IndiceMarkup, Markup, MarkupIndice
@@ -48,6 +48,16 @@ class IndiceMarkupRepository:
         await self._session.flush()
         await self._session.refresh(indice)
         return indice
+
+    async def is_used_by_active_markups(self, indice_id: uuid.UUID) -> bool:
+        result = await self._session.execute(
+            select(exists().where(
+                MarkupIndice.indice_id == indice_id,
+                MarkupIndice.markup_id == Markup.id,
+                Markup.ativo == True,  # noqa: E712
+            ))
+        )
+        return bool(result.scalar())
 
     async def delete(self, indice: IndiceMarkup) -> None:
         indice.ativo = False

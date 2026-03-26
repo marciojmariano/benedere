@@ -27,6 +27,11 @@ class NutricionistaNaoEncontradoError(Exception):
         super().__init__(f"Nutricionista não encontrado: {nutricionista_id}")
 
 
+class ClienteEmUsoError(Exception):
+    def __init__(self):
+        super().__init__("Cliente possui pedido(s) em aberto e não pode ser desativado")
+
+
 # ── Service ───────────────────────────────────────────────────────────────────
 
 class ClienteService:
@@ -123,6 +128,8 @@ class ClienteService:
 
     async def desativar(self, cliente_id: uuid.UUID) -> None:
         cliente = await self.buscar_por_id(cliente_id)
+        if await self._cliente_repo.has_active_pedidos(cliente_id):
+            raise ClienteEmUsoError()
         await self._cliente_repo.delete(cliente)
 
     async def reativar(self, cliente_id: uuid.UUID) -> Cliente:

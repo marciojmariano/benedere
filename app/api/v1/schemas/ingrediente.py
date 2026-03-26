@@ -74,6 +74,7 @@ class IngredienteResponse(BaseModel):
     tipo: TipoIngrediente
     unidade_medida: UnidadeMedida
     custo_unitario: Decimal
+    saldo_atual: Decimal
     descricao: str | None
     markup_id: uuid.UUID | None
     ativo: bool

@@ -23,6 +23,11 @@ class IngredienteInativoError(Exception):
         super().__init__("Ingrediente está inativo e não pode ser modificado")
 
 
+class IngredienteEmUsoError(Exception):
+    def __init__(self):
+        super().__init__("Ingrediente está em uso em produto(s) ou faixa(s) de embalagem e não pode ser desativado")
+
+
 class MarkupNaoEncontradoError(Exception):
     def __init__(self, markup_id: uuid.UUID):
         super().__init__(f"Markup não encontrado: {markup_id}")
@@ -117,6 +122,8 @@ class IngredienteService:
 
     async def desativar(self, ingrediente_id: uuid.UUID) -> None:
         ingrediente = await self.buscar_por_id(ingrediente_id)
+        if await self._ingrediente_repo.is_used(ingrediente_id):
+            raise IngredienteEmUsoError()
         await self._ingrediente_repo.delete(ingrediente)
 
     async def reativar(self, ingrediente_id: uuid.UUID) -> Ingrediente:

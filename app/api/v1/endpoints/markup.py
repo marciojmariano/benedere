@@ -16,6 +16,7 @@ from app.api.v1.schemas.markup import (
 )
 from app.core.auth0 import get_tenant_id
 from app.domain.services.markup_service import (
+    IndiceEmUsoError,
     IndiceMarkupNaoEncontradoError,
     IndiceMarkupService,
     MarkupNaoEncontradoError,
@@ -130,6 +131,8 @@ async def desativar_indice(
         await service.desativar(indice_id)
     except IndiceMarkupNaoEncontradoError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except IndiceEmUsoError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 
 # ── Endpoints: Markup ─────────────────────────────────────────────────────────

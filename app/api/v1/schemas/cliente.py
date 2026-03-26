@@ -18,6 +18,13 @@ class ClienteCreateRequest(BaseModel):
     nutricionista_id: uuid.UUID | None = None
     markup_id_padrao: uuid.UUID | None = None
 
+    @field_validator("email", "telefone", "endereco", "observacoes", mode="before")
+    @classmethod
+    def empty_str_to_none(cls, v):
+        if isinstance(v, str) and v.strip() == "":
+            return None
+        return v
+
     @field_validator("nome")
     @classmethod
     def validate_nome(cls, v: str) -> str:
@@ -47,6 +54,13 @@ class ClienteUpdateRequest(BaseModel):
     observacoes: str | None = None
     nutricionista_id: uuid.UUID | None = None
     markup_id_padrao: uuid.UUID | None = None
+
+    @field_validator("email", "telefone", "endereco", "observacoes", mode="before")
+    @classmethod
+    def empty_str_to_none(cls, v):
+        if isinstance(v, str) and v.strip() == "":
+            return None
+        return v
 
     @field_validator("nome")
     @classmethod

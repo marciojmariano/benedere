@@ -9,6 +9,7 @@ from app.api.v1.endpoints.ingrediente import router as ingrediente_router
 from app.api.v1.endpoints.produto import router as produto_router
 from app.api.v1.endpoints.pedido import router as pedido_router
 from app.api.v1.endpoints.faixa_peso_embalagem import router as faixa_peso_router
+from app.api.v1.endpoints.movimentacao_estoque import router as estoque_router
 # PDF temporariamente desabilitado — será reescrito com o novo schema de Pedido
 # from app.api.v1.endpoints.pdf import router as pdf_router
 
@@ -38,6 +39,7 @@ app.include_router(ingrediente_router, prefix="/api/v1")
 app.include_router(produto_router, prefix="/api/v1")
 app.include_router(pedido_router, prefix="/api/v1")
 app.include_router(faixa_peso_router, prefix="/api/v1")
+app.include_router(estoque_router, prefix="/api/v1")
 # app.include_router(pdf_router, prefix="/api/v1")
 
 

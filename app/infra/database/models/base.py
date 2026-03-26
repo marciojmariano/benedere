@@ -45,57 +45,71 @@ class TenantScoped(TimestampMixin):
 # ── Enums: Tenant ────────────────────────────────────────────────────────────
 
 class TenantStatus(str, enum.Enum):
-    ATIVO = "ativo"
-    SUSPENSO = "suspenso"
-    TRIAL = "trial"
-    CANCELADO = "cancelado"
+    ATIVO = "ATIVO"
+    SUSPENSO = "SUSPENSO"
+    TRIAL = "TRIAL"
+    CANCELADO = "CANCELADO"
 
 
 class TenantPlano(str, enum.Enum):
-    FREE = "free"
-    STARTER = "starter"
-    PROFESSIONAL = "professional"
-    ENTERPRISE = "enterprise"
+    FREE = "FREE"
+    STARTER = "STARTER"
+    PROFESSIONAL = "PROFESSIONAL"
+    ENTERPRISE = "ENTERPRISE"
 
 
 # ── Enums: Ingrediente ───────────────────────────────────────────────────────
 
 class TipoIngrediente(str, enum.Enum):
-    INSUMO = "insumo"
-    EMBALAGEM = "embalagem"
+    INSUMO = "INSUMO"
+    EMBALAGEM = "EMBALAGEM"
 
 
 class UnidadeMedida(str, enum.Enum):
-    KG = "kg"
-    G = "g"
-    ML = "ml"
-    L = "l"
-    UNIDADE = "unidade"
+    KG = "KG"
+    G = "G"
+    ML = "ML"
+    L = "L"
+    UNIDADE = "UNIDADE"
 
 
 # ── Enums: Produto / Refeição ────────────────────────────────────────────────
 
 class TipoRefeicao(str, enum.Enum):
     """Tipo de refeição — enum fixo no banco."""
-    CAFE_MANHA = "cafe_manha"
-    LANCHE_MANHA = "lanche_manha"
-    ALMOCO = "almoco"
-    LANCHE_TARDE = "lanche_tarde"
-    JANTAR = "jantar"
+    CAFE_MANHA = "CAFE_MANHA"
+    LANCHE_MANHA = "LANCHE_MANHA"
+    ALMOCO = "ALMOCO"
+    LANCHE_TARDE = "LANCHE_TARDE"
+    JANTAR = "JANTAR"
 
 
 # ── Enums: Pedido ────────────────────────────────────────────────────────────
 
 class StatusPedido(str, enum.Enum):
     """Status do pedido unificado com máquina de estados."""
-    RASCUNHO = "rascunho"
-    APROVADO = "aprovado"
-    EM_PRODUCAO = "em_producao"
-    ENTREGUE = "entregue"
-    CANCELADO = "cancelado"
+    RASCUNHO = "RASCUNHO"
+    APROVADO = "APROVADO"
+    EM_PRODUCAO = "EM_PRODUCAO"
+    ENTREGUE = "ENTREGUE"
+    CANCELADO = "CANCELADO"
 
 
 class TipoItem(str, enum.Enum):
     """Tipo do item no pedido: série (catálogo) ou personalizado."""
-    SERIE = "serie"
-    PERSONALIZADO = "personalizado"
+    SERIE = "SERIE"
+    PERSONALIZADO = "PERSONALIZADO"
+
+
+# ── Enums: Estoque ────────────────────────────────────────────────────────────
+
+class TipoMovimentacao(str, enum.Enum):
+    """Tipo de movimentação de estoque."""
+    COMPRA = "COMPRA"
+    ENTRADA_PRODUCAO = "ENTRADA_PRODUCAO"   # reservado para futuro
+    AJUSTE_ENTRADA = "AJUSTE_ENTRADA"       # reservado para futuro
+    VENDA_DEVOLUCAO = "VENDA_DEVOLUCAO"     # reservado para futuro
+    VENDA = "VENDA"                         # reservado para futuro
+    SAIDA_PRODUCAO = "SAIDA_PRODUCAO"       # reservado para futuro
+    AJUSTE_SAIDA = "AJUSTE_SAIDA"           # reservado para futuro
+    COMPRA_DEVOLUCAO = "COMPRA_DEVOLUCAO"   # reservado para futuro

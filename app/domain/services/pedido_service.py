@@ -321,15 +321,19 @@ class PedidoService:
             )
             custo_total += custo_item
 
-        preco_unitario = custo_total * markup_fator
-        preco_total = preco_unitario * quantidade
-
         # tipo_refeicao: usa override se fornecido, senão herda do catálogo
         tipo_refeicao = tipo_refeicao_override or produto.tipo_refeicao
 
         # Resolve embalagem pelo peso total dos ingredientes
         peso_total_g = sum(float(c.quantidade_g) for c in composicao_snapshot)
         embalagem = await self._resolver_embalagem(peso_total_g)
+
+        # Soma custo da embalagem antes de aplicar markup
+        if embalagem:
+            custo_total += Decimal(str(embalagem[2]))
+
+        preco_unitario = custo_total * markup_fator
+        preco_total = preco_unitario * quantidade
 
         item = PedidoItem(
             pedido_id=pedido.id,
@@ -367,12 +371,17 @@ class PedidoService:
             Decimal(str(c.quantidade_g)) / Decimal("1000") * Decimal(str(c.custo_kg_snapshot))
             for c in composicao_items
         )
-        preco_unitario = custo_total * markup_fator
-        preco_total = preco_unitario * quantidade
 
         # Resolve embalagem pelo peso total dos ingredientes
         peso_total_g = sum(float(c.quantidade_g) for c in composicao_items)
         embalagem = await self._resolver_embalagem(peso_total_g)
+
+        # Soma custo da embalagem antes de aplicar markup
+        if embalagem:
+            custo_total += Decimal(str(embalagem[2]))
+
+        preco_unitario = custo_total * markup_fator
+        preco_total = preco_unitario * quantidade
 
         item = PedidoItem(
             pedido_id=pedido.id,
@@ -463,8 +472,7 @@ class PedidoService:
         pedido_atualizado = await self._pedido_repo.get_by_id(pedido.id)
         if pedido_atualizado:
             total = sum(
-                Decimal(str(item.preco_total)) +
-                (Decimal(str(item.embalagem_custo_snapshot or 0)) * item.quantidade)
+                Decimal(str(item.preco_total))
                 for item in pedido_atualizado.itens
             )
             pedido_atualizado.valor_total = float(total)

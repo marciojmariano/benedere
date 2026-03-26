@@ -5,8 +5,8 @@ Revises: 00000000001
 Create Date: 2026-03-25
 
 Adiciona:
-- Enum tipoingrediente (insumo, embalagem)
-- Coluna tipo em ingredientes (default: insumo)
+- Enum tipoingrediente (INSUMO, EMBALAGEM)
+- Coluna tipo em ingredientes (default: INSUMO)
 - Tabela faixas_peso_embalagem (faixas de peso por tenant)
 - Colunas de embalagem em pedido_itens (snapshot auto-selecionado)
 """
@@ -24,7 +24,7 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
 
     # ── 1. Enum TipoIngrediente ───────────────────────────────────────────────
-    tipoingrediente = sa.Enum('insumo', 'embalagem', name='tipoingrediente')
+    tipoingrediente = sa.Enum('INSUMO', 'EMBALAGEM', name='tipoingrediente')
     tipoingrediente.create(op.get_bind(), checkfirst=True)
 
     # ── 2. Coluna tipo em ingredientes ───────────────────────────────────────
@@ -32,9 +32,9 @@ def upgrade() -> None:
         'ingredientes',
         sa.Column(
             'tipo',
-            sa.Enum('insumo', 'embalagem', name='tipoingrediente'),
+            sa.Enum('INSUMO', 'EMBALAGEM', name='tipoingrediente'),
             nullable=False,
-            server_default='insumo',
+            server_default='INSUMO',
         )
     )
 
