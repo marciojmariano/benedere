@@ -151,13 +151,14 @@ class ProdutoService:
         resultado = []
         for item in itens:
             ing = item.ingrediente
-            custo_item = Decimal(str(item.quantidade_g)) / Decimal("1000") * Decimal(str(ing.custo_unitario))
+            custo_efetivo = Decimal(str(ing.custo_calculado)) if ing.custo_calculado is not None else Decimal(str(ing.custo_unitario))
+            custo_item = Decimal(str(item.quantidade_g)) / Decimal("1000") * custo_efetivo
 
             resultado.append({
                 "id": item.id,
                 "ingrediente_id": ing.id,
                 "ingrediente_nome": ing.nome,
-                "ingrediente_custo_unitario": Decimal(str(ing.custo_unitario)),
+                "ingrediente_custo_unitario": custo_efetivo,
                 "quantidade_g": Decimal(str(item.quantidade_g)),
                 "ordem": item.ordem,
                 "custo_item": round(custo_item, 4),

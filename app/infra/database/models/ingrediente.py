@@ -3,11 +3,11 @@ import uuid
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, Enum, ForeignKey, Numeric, String, Text
+from sqlalchemy import Boolean, Enum, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.infra.database.models.base import Base, TenantScoped, TipoIngrediente, UnidadeMedida
+from app.infra.database.models.base import Base, EstrategiaCusto, TenantScoped, TipoIngrediente, UnidadeMedida
 
 if TYPE_CHECKING:
     from app.infra.database.models.markup import Markup
@@ -37,6 +37,17 @@ class Ingrediente(Base, TenantScoped):
     ativo: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     saldo_atual: Mapped[Decimal] = mapped_column(
         Numeric(12, 4), nullable=False, server_default="0", default=Decimal("0")
+    )
+
+    # ── Estratégia de custo ───────────────────────────────────────────────────
+    estrategia_custo: Mapped[EstrategiaCusto | None] = mapped_column(
+        Enum(EstrategiaCusto), nullable=True, default=None
+    )
+    periodo_dias_custo_medio: Mapped[int | None] = mapped_column(
+        Integer, nullable=True, default=None
+    )
+    custo_calculado: Mapped[float | None] = mapped_column(
+        Numeric(10, 4), nullable=True, default=None
     )
 
     # Markup específico do ingrediente (opcional)

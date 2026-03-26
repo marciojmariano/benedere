@@ -1,9 +1,9 @@
 """Model: Tenant — raiz do multi-tenancy."""
 import uuid
-from sqlalchemy import Boolean, Enum, ForeignKey, String
+from sqlalchemy import Boolean, Enum, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
-from app.infra.database.models.base import Base, TimestampMixin, TenantPlano, TenantStatus
+from app.infra.database.models.base import Base, EstrategiaCusto, TimestampMixin, TenantPlano, TenantStatus
 
 class Tenant(Base, TimestampMixin):
     __tablename__ = "tenants"
@@ -26,4 +26,13 @@ class Tenant(Base, TimestampMixin):
         ForeignKey("markups.id", ondelete="SET NULL"),
         nullable=True,
         default=None,
+    )
+
+    # ── Estratégia de custo padrão do tenant ─────────────────────────────────
+    estrategia_custo_padrao: Mapped[EstrategiaCusto] = mapped_column(
+        Enum(EstrategiaCusto), nullable=False, default=EstrategiaCusto.MANUAL,
+        server_default="MANUAL"
+    )
+    periodo_dias_custo_medio_padrao: Mapped[int | None] = mapped_column(
+        Integer, nullable=True, default=30
     )

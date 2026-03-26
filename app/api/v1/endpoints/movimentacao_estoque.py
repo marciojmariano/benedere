@@ -12,6 +12,7 @@ from app.api.v1.schemas.movimentacao_estoque import (
     MovimentacaoEstoqueResponse,
 )
 from app.core.auth0 import get_tenant_id
+from app.domain.services.custo_ingrediente_service import CustoIngredienteService
 from app.domain.services.movimentacao_estoque_service import (
     IngredienteNaoEncontradoParaEstoqueError,
     MovimentacaoEstoqueService,
@@ -20,20 +21,24 @@ from app.domain.services.movimentacao_estoque_service import (
 from app.infra.database.session import get_session
 from app.infra.repository.ingrediente_repository import IngredienteRepository
 from app.infra.repository.movimentacao_estoque_repository import MovimentacaoEstoqueRepository
+from app.infra.repository.tenant_repository import TenantRepository
 
 router = APIRouter(prefix="/estoque", tags=["Estoque"])
 
 
 # ── Dependency ────────────────────────────────────────────────────────────────
 
-def get_movimentacao_service(
+async def get_movimentacao_service(
     session: AsyncSession = Depends(get_session),
     tenant_id: str = Depends(get_tenant_id),
 ) -> MovimentacaoEstoqueService:
     _tenant_id = uuid.UUID(tenant_id)
     mov_repo = MovimentacaoEstoqueRepository(session, tenant_id=_tenant_id)
     ingrediente_repo = IngredienteRepository(session, tenant_id=_tenant_id)
-    return MovimentacaoEstoqueService(mov_repo, ingrediente_repo, tenant_id=_tenant_id)
+    tenant_repo = TenantRepository(session)
+    tenant = await tenant_repo.get_by_id(_tenant_id)
+    custo_service = CustoIngredienteService(mov_repo, ingrediente_repo, tenant) if tenant else None
+    return MovimentacaoEstoqueService(mov_repo, ingrediente_repo, tenant_id=_tenant_id, custo_service=custo_service)
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────

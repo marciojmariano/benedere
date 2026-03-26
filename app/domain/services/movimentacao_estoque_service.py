@@ -10,6 +10,7 @@ from decimal import Decimal, InvalidOperation
 import openpyxl
 
 from app.api.v1.schemas.movimentacao_estoque import ImportacaoEstoqueResponse, ImportacaoLinhaErro
+from app.domain.services.custo_ingrediente_service import CustoIngredienteService
 from app.infra.database.models.base import TipoMovimentacao
 from app.infra.database.models.movimentacao_estoque import MovimentacaoEstoque
 from app.infra.repository.movimentacao_estoque_repository import MovimentacaoEstoqueRepository
@@ -37,10 +38,12 @@ class MovimentacaoEstoqueService:
         mov_repo: MovimentacaoEstoqueRepository,
         ingrediente_repo: IngredienteRepository,
         tenant_id: uuid.UUID,
+        custo_service: CustoIngredienteService | None = None,
     ) -> None:
         self._mov_repo = mov_repo
         self._ingrediente_repo = ingrediente_repo
         self._tenant_id = tenant_id
+        self._custo_service = custo_service
 
     async def registrar_entrada(
         self,
@@ -66,10 +69,14 @@ class MovimentacaoEstoqueService:
             observacoes=observacoes,
         )
 
-        # Atualiza saldo e custo do ingrediente (atomicidade garantida pelo flush único)
+        # Atualiza saldo e custo manual do ingrediente
         ingrediente.saldo_atual = Decimal(str(ingrediente.saldo_atual)) + quantidade
         ingrediente.custo_unitario = float(preco_unitario_custo)
         ingrediente.updated_at = datetime.utcnow()
+
+        # Recalcula custo_calculado conforme a estratégia configurada
+        if self._custo_service is not None:
+            await self._custo_service.recalcular_e_persistir(ingrediente)
 
         return await self._mov_repo.create(mov)
 

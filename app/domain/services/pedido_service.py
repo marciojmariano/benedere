@@ -306,7 +306,7 @@ class PedidoService:
         custo_total = Decimal("0")
         for comp in composicao_catalogo:
             ing = comp.ingrediente
-            custo_kg = Decimal(str(ing.custo_unitario))
+            custo_kg = Decimal(str(ing.custo_calculado)) if ing.custo_calculado is not None else Decimal(str(ing.custo_unitario))
             qtd_g = Decimal(str(comp.quantidade_g))
             custo_item = qtd_g / Decimal("1000") * custo_kg
 
@@ -411,12 +411,13 @@ class PedidoService:
             if not ingrediente:
                 raise IngredienteNaoEncontradoError(ingrediente_id)
 
+            custo_kg = ingrediente.custo_calculado if ingrediente.custo_calculado is not None else ingrediente.custo_unitario
             items.append(
                 PedidoItemComposicao(
                     ingrediente_id=ingrediente.id,
                     ingrediente_nome_snap=ingrediente.nome,
                     quantidade_g=float(comp["quantidade_g"]),
-                    custo_kg_snapshot=float(ingrediente.custo_unitario),
+                    custo_kg_snapshot=float(custo_kg),
                     kcal_snapshot=0,  # TODO: calcular via JSONB
                 )
             )
@@ -432,7 +433,8 @@ class PedidoService:
         if not faixa:
             return None
         ing = faixa.ingrediente_embalagem
-        return (ing.id, ing.nome, float(ing.custo_unitario))
+        custo_embalagem = ing.custo_calculado if ing.custo_calculado is not None else ing.custo_unitario
+        return (ing.id, ing.nome, float(custo_embalagem))
 
     async def _resolver_markup(self, markup_id: uuid.UUID | None, cliente) -> uuid.UUID | None:
         """Cadeia: parâmetro → cliente.markup_id_padrao → tenant.markup_id_padrao → null."""

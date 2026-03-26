@@ -3,11 +3,14 @@ Repository: MovimentacaoEstoque
 Todo acesso filtrado por tenant_id.
 """
 import uuid
+from datetime import date, timedelta
+from decimal import Decimal
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.infra.database.models.base import TipoMovimentacao
 from app.infra.database.models.movimentacao_estoque import MovimentacaoEstoque
 
 
@@ -61,3 +64,61 @@ class MovimentacaoEstoqueRepository:
             .offset(offset)
         )
         return list(result.scalars().all())
+
+    # ── Queries de agregação para cálculo de custo ────────────────────────────
+
+    async def get_ultima_compra(self, ingrediente_id: uuid.UUID) -> Decimal | None:
+        """Retorna o preço unitário da entrada de compra mais recente."""
+        result = await self._session.execute(
+            select(MovimentacaoEstoque.preco_unitario_custo)
+            .where(
+                MovimentacaoEstoque.tenant_id == self._tenant_id,
+                MovimentacaoEstoque.ingrediente_id == ingrediente_id,
+                MovimentacaoEstoque.tipo == TipoMovimentacao.COMPRA,
+            )
+            .order_by(
+                MovimentacaoEstoque.data_movimentacao.desc(),
+                MovimentacaoEstoque.created_at.desc(),
+            )
+            .limit(1)
+        )
+        valor = result.scalar_one_or_none()
+        return Decimal(str(valor)) if valor is not None else None
+
+    async def calcular_media_ponderada_total(self, ingrediente_id: uuid.UUID) -> Decimal | None:
+        """Média ponderada por quantidade de todas as entradas de compra."""
+        result = await self._session.execute(
+            select(
+                func.sum(
+                    MovimentacaoEstoque.quantidade * MovimentacaoEstoque.preco_unitario_custo
+                ) / func.sum(MovimentacaoEstoque.quantidade)
+            )
+            .where(
+                MovimentacaoEstoque.tenant_id == self._tenant_id,
+                MovimentacaoEstoque.ingrediente_id == ingrediente_id,
+                MovimentacaoEstoque.tipo == TipoMovimentacao.COMPRA,
+            )
+        )
+        valor = result.scalar_one_or_none()
+        return Decimal(str(valor)).quantize(Decimal("0.0001")) if valor is not None else None
+
+    async def calcular_media_ponderada_periodo(
+        self, ingrediente_id: uuid.UUID, dias: int
+    ) -> Decimal | None:
+        """Média ponderada por quantidade das entradas de compra nos últimos N dias."""
+        data_limite = date.today() - timedelta(days=dias)
+        result = await self._session.execute(
+            select(
+                func.sum(
+                    MovimentacaoEstoque.quantidade * MovimentacaoEstoque.preco_unitario_custo
+                ) / func.sum(MovimentacaoEstoque.quantidade)
+            )
+            .where(
+                MovimentacaoEstoque.tenant_id == self._tenant_id,
+                MovimentacaoEstoque.ingrediente_id == ingrediente_id,
+                MovimentacaoEstoque.tipo == TipoMovimentacao.COMPRA,
+                MovimentacaoEstoque.data_movimentacao >= data_limite,
+            )
+        )
+        valor = result.scalar_one_or_none()
+        return Decimal(str(valor)).quantize(Decimal("0.0001")) if valor is not None else None

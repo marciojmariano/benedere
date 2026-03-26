@@ -101,6 +101,16 @@ class TipoItem(str, enum.Enum):
     PERSONALIZADO = "PERSONALIZADO"
 
 
+# ── Enums: Custo de Ingrediente ──────────────────────────────────────────────
+
+class EstrategiaCusto(str, enum.Enum):
+    """Estratégia de cálculo do custo unitário efetivo do ingrediente."""
+    MANUAL = "MANUAL"
+    ULTIMA_COMPRA = "ULTIMA_COMPRA"
+    MEDIA_PONDERADA_TOTAL = "MEDIA_PONDERADA_TOTAL"
+    MEDIA_PONDERADA_PERIODO = "MEDIA_PONDERADA_PERIODO"
+
+
 # ── Enums: Estoque ────────────────────────────────────────────────────────────
 
 class TipoMovimentacao(str, enum.Enum):
