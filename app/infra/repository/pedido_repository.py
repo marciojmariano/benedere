@@ -3,12 +3,16 @@ Repository: Pedido
 Task: 3.1.3
 """
 import uuid
+from datetime import date
+from typing import Literal
 
-from sqlalchemy import func, select
+from sqlalchemy import func, null, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.infra.database.models.base import StatusPedido
+from app.infra.database.models.cliente import Cliente
+from app.infra.database.models.ingrediente import Ingrediente
 from app.infra.database.models.pedido import Pedido
 from app.infra.database.models.pedido_item import PedidoItem
 from app.infra.database.models.pedido_item_composicao import PedidoItemComposicao
@@ -65,6 +69,96 @@ class PedidoRepository:
     async def delete(self, pedido: Pedido) -> None:
         await self._session.delete(pedido)
         await self._session.flush()
+
+    async def explosao_ingredientes(
+        self,
+        data_inicio: date,
+        data_fim: date,
+        status_list: list[StatusPedido] | None = None,
+        filtro_data: Literal["entrega", "criacao"] = "entrega",
+    ) -> list:
+        """Agrega ingredientes de todos os pedidos do período (BOM explosion)."""
+        if status_list is None:
+            status_list = [StatusPedido.APROVADO, StatusPedido.EM_PRODUCAO]
+
+        campo_data = Pedido.data_entrega_prevista if filtro_data == "entrega" else Pedido.created_at
+
+        qtd_total = func.sum(
+            PedidoItemComposicao.quantidade_g * PedidoItem.quantidade
+        ).label("quantidade_total_g")
+        custo_kg_medio = (
+            func.sum(
+                PedidoItemComposicao.quantidade_g
+                * PedidoItem.quantidade
+                * PedidoItemComposicao.custo_kg_snapshot
+            )
+            / func.nullif(
+                func.sum(PedidoItemComposicao.quantidade_g * PedidoItem.quantidade),
+                0,
+            )
+        ).label("custo_kg_medio")
+
+        query = (
+            select(
+                PedidoItemComposicao.ingrediente_id,
+                PedidoItemComposicao.ingrediente_nome_snap,
+                Ingrediente.tipo,
+                Ingrediente.unidade_medida,
+                Ingrediente.saldo_atual,
+                qtd_total,
+                custo_kg_medio,
+            )
+            .join(PedidoItem, PedidoItem.id == PedidoItemComposicao.pedido_item_id)
+            .join(Pedido, Pedido.id == PedidoItem.pedido_id)
+            .outerjoin(Ingrediente, Ingrediente.id == PedidoItemComposicao.ingrediente_id)
+            .where(Pedido.tenant_id == self._tenant_id)
+            .where(Pedido.status.in_(status_list))
+            .where(campo_data >= data_inicio)
+            .where(campo_data <= data_fim)
+            .group_by(
+                PedidoItemComposicao.ingrediente_id,
+                PedidoItemComposicao.ingrediente_nome_snap,
+                Ingrediente.tipo,
+                Ingrediente.unidade_medida,
+                Ingrediente.saldo_atual,
+            )
+            .order_by(PedidoItemComposicao.ingrediente_nome_snap)
+        )
+        result = await self._session.execute(query)
+        return result.all()
+
+    async def listar_pedidos_periodo(
+        self,
+        data_inicio: date,
+        data_fim: date,
+        status_list: list[StatusPedido] | None = None,
+        filtro_data: Literal["entrega", "criacao"] = "entrega",
+    ) -> list:
+        """Retorna pedidos do período com nome do cliente e contagem de itens."""
+        if status_list is None:
+            status_list = [StatusPedido.APROVADO, StatusPedido.EM_PRODUCAO]
+
+        campo_data = Pedido.data_entrega_prevista if filtro_data == "entrega" else Pedido.created_at
+
+        query = (
+            select(
+                Pedido.id,
+                Pedido.numero,
+                Cliente.nome.label("cliente_nome"),
+                Pedido.data_entrega_prevista,
+                func.count(PedidoItem.id).label("total_itens"),
+            )
+            .join(Cliente, Cliente.id == Pedido.cliente_id)
+            .outerjoin(PedidoItem, PedidoItem.pedido_id == Pedido.id)
+            .where(Pedido.tenant_id == self._tenant_id)
+            .where(Pedido.status.in_(status_list))
+            .where(campo_data >= data_inicio)
+            .where(campo_data <= data_fim)
+            .group_by(Pedido.id, Pedido.numero, Cliente.nome, Pedido.data_entrega_prevista)
+            .order_by(Pedido.data_entrega_prevista.asc().nulls_last(), Pedido.numero)
+        )
+        result = await self._session.execute(query)
+        return result.all()
 
     async def get_next_numero(self) -> str:
         """Gera o próximo número sequencial: PED-2026-0001."""
