@@ -29,7 +29,7 @@ class PedidoNaoEncontradoError(Exception):
 
 class PedidoNaoEditavelError(Exception):
     def __init__(self):
-        super().__init__("Pedido só pode ser editado no status RASCUNHO")
+        super().__init__("Pedido só pode ser editado nos status RASCUNHO ou APROVADO")
 
 
 class TransicaoStatusInvalidaError(Exception):
@@ -71,8 +71,8 @@ class NomeObrigatorioError(Exception):
 
 TRANSICOES_VALIDAS: dict[StatusPedido, list[StatusPedido]] = {
     StatusPedido.RASCUNHO: [StatusPedido.APROVADO, StatusPedido.CANCELADO],
-    StatusPedido.APROVADO: [StatusPedido.EM_PRODUCAO, StatusPedido.CANCELADO],
-    StatusPedido.EM_PRODUCAO: [StatusPedido.ENTREGUE, StatusPedido.CANCELADO],
+    StatusPedido.APROVADO: [StatusPedido.EM_PRODUCAO, StatusPedido.CANCELADO, StatusPedido.RASCUNHO],
+    StatusPedido.EM_PRODUCAO: [StatusPedido.ENTREGUE, StatusPedido.CANCELADO, StatusPedido.APROVADO],
     StatusPedido.ENTREGUE: [],
     StatusPedido.CANCELADO: [],
 }
@@ -189,6 +189,56 @@ class PedidoService:
 
         pedido.updated_at = datetime.utcnow()
         return await self._pedido_repo.update(pedido)
+
+    # ── Duplicar pedido ──────────────────────────────────────────────────────
+
+    async def duplicar(self, pedido_id: uuid.UUID) -> Pedido:
+        """Clona um pedido existente como novo RASCUNHO com os mesmos itens e snapshots."""
+        original = await self.buscar_por_id(pedido_id)
+
+        numero = await self._pedido_repo.get_next_numero()
+
+        novo_pedido = Pedido(
+            tenant_id=self._tenant_id,
+            numero=numero,
+            cliente_id=original.cliente_id,
+            markup_id=original.markup_id,
+            status=StatusPedido.RASCUNHO,
+            observacoes=original.observacoes,
+            data_entrega_prevista=original.data_entrega_prevista,
+            valor_total=original.valor_total,
+        )
+        novo_pedido = await self._pedido_repo.create(novo_pedido)
+
+        for item in original.itens:
+            composicao_clone = [
+                PedidoItemComposicao(
+                    ingrediente_id=c.ingrediente_id,
+                    ingrediente_nome_snap=c.ingrediente_nome_snap,
+                    quantidade_g=c.quantidade_g,
+                    custo_kg_snapshot=c.custo_kg_snapshot,
+                    kcal_snapshot=c.kcal_snapshot,
+                )
+                for c in item.composicao
+            ]
+            novo_item = PedidoItem(
+                pedido_id=novo_pedido.id,
+                produto_id=item.produto_id,
+                nome_snapshot=item.nome_snapshot,
+                tipo_refeicao=item.tipo_refeicao,
+                tipo=item.tipo,
+                quantidade=item.quantidade,
+                preco_unitario=item.preco_unitario,
+                preco_total=item.preco_total,
+                composicao=composicao_clone,
+                embalagem_ingrediente_id=item.embalagem_ingrediente_id,
+                embalagem_nome_snapshot=item.embalagem_nome_snapshot,
+                embalagem_custo_snapshot=item.embalagem_custo_snapshot,
+            )
+            self._session_add(novo_item)
+
+        await self._session_flush()
+        return await self.buscar_por_id(novo_pedido.id)
 
     # ── Adicionar item ───────────────────────────────────────────────────────
 
@@ -482,7 +532,7 @@ class PedidoService:
             await self._pedido_repo.update(pedido_atualizado)
 
     def _validar_editavel(self, pedido: Pedido) -> None:
-        if pedido.status != StatusPedido.RASCUNHO:
+        if pedido.status not in (StatusPedido.RASCUNHO, StatusPedido.APROVADO):
             raise PedidoNaoEditavelError()
 
     def _encontrar_item(self, pedido: Pedido, item_id: uuid.UUID) -> PedidoItem:

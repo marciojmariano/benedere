@@ -199,6 +199,24 @@ async def transicionar_status(
         _handle_conflict(e)
 
 
+# ── Duplicar pedido ──────────────────────────────────────────────────────────
+
+@router.post(
+    "/{pedido_id}/duplicar",
+    response_model=PedidoDetalheResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Duplicar pedido como novo rascunho",
+)
+async def duplicar_pedido(
+    pedido_id: uuid.UUID,
+    service: PedidoService = Depends(get_pedido_service),
+):
+    try:
+        return await service.duplicar(pedido_id)
+    except PedidoNaoEncontradoError as e:
+        _handle_not_found(e)
+
+
 # ── Itens do pedido ──────────────────────────────────────────────────────────
 
 @router.post(
