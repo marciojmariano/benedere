@@ -6,7 +6,6 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 
-from app.infra.database.models.base import TipoRefeicao
 from app.infra.database.models.produto import Produto
 from app.infra.database.models.produto_composicao import ProdutoComposicao
 from app.infra.repository.produto_repository import ProdutoRepository
@@ -57,14 +56,12 @@ class ProdutoService:
     async def criar(
         self,
         nome: str,
-        tipo_refeicao: TipoRefeicao | None = None,
         descricao: str | None = None,
         composicao: list[dict] | None = None,
     ) -> Produto:
         produto = Produto(
             tenant_id=self._tenant_id,
             nome=nome,
-            tipo_refeicao=tipo_refeicao,
             descricao=descricao,
             ativo=True,
         )
@@ -90,7 +87,6 @@ class ProdutoService:
         self,
         produto_id: uuid.UUID,
         nome: str | None = None,
-        tipo_refeicao: TipoRefeicao | None = None,
         descricao: str | None = None,
     ) -> Produto:
         produto = await self.buscar_por_id(produto_id)
@@ -100,8 +96,6 @@ class ProdutoService:
 
         if nome is not None:
             produto.nome = nome
-        if tipo_refeicao is not None:
-            produto.tipo_refeicao = tipo_refeicao
         if descricao is not None:
             produto.descricao = descricao
 

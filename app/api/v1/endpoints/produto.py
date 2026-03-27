@@ -65,7 +65,6 @@ async def criar_produto(
 
         return await service.criar(
             nome=body.nome,
-            tipo_refeicao=body.tipo_refeicao,
             descricao=body.descricao,
             composicao=composicao,
         )
@@ -105,7 +104,6 @@ async def buscar_produto(
         return ProdutoDetalheResponse(
             id=produto.id,
             nome=produto.nome,
-            tipo_refeicao=produto.tipo_refeicao,
             peso_total_g=produto.peso_total_g,
             descricao=produto.descricao,
             ativo=produto.ativo,
@@ -133,7 +131,6 @@ async def atualizar_produto(
         return await service.atualizar(
             produto_id=produto_id,
             nome=body.nome,
-            tipo_refeicao=body.tipo_refeicao,
             descricao=body.descricao,
         )
     except ProdutoNaoEncontradoError as e:
