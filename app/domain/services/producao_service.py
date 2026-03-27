@@ -129,8 +129,18 @@ class ProducaoService:
                     pedidos=[],
                 )
 
+            _TIPO_ORDER = {
+                'CAFE_MANHA': 0, 'LANCHE_MANHA': 1, 'ALMOCO': 2,
+                'LANCHE_TARDE': 3, 'JANTAR': 4,
+            }
+            itens_sorted = sorted(pedido.itens, key=lambda i: i.nome_snapshot or '', reverse=True)
+            itens_sorted = sorted(
+                itens_sorted,
+                key=lambda i: _TIPO_ORDER.get(i.tipo_refeicao.value if i.tipo_refeicao else '', 99),
+            )
+
             itens_detalhe: list[MapaItemDetalhe] = []
-            for item in sorted(pedido.itens, key=lambda i: i.id):
+            for item in itens_sorted:
                 composicao = [
                     MapaComposicaoItem(
                         ingrediente_nome=c.ingrediente_nome_snap,
