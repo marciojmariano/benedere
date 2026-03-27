@@ -12,6 +12,11 @@ from app.api.v1.schemas.producao import (
     ExplosaoIngredienteItem,
     ExplosaoPedidoDetalhe,
     ExplosaoProducaoResponse,
+    MapaClienteGrupo,
+    MapaComposicaoItem,
+    MapaItemDetalhe,
+    MapaMontagemResponse,
+    MapaPedidoDetalhe,
 )
 
 
@@ -91,4 +96,77 @@ class ProducaoService:
             custo_total_estimado=custo_total_geral.quantize(Decimal("0.01")),
             ingredientes=ingredientes,
             pedidos=pedidos,
+        )
+
+    async def gerar_mapa_montagem(
+        self,
+        data_inicio: date,
+        data_fim: date,
+        status_list: list | None = None,
+        filtro_data: str = "entrega",
+    ) -> MapaMontagemResponse:
+        pedidos = await self._pedido_repo.mapa_montagem(
+            data_inicio=data_inicio,
+            data_fim=data_fim,
+            status_list=status_list,
+            filtro_data=filtro_data,
+        )
+
+        # Agrupa por cliente preservando a ordem de entrega
+        clientes_dict: dict = {}
+        total_itens = 0
+
+        for pedido in pedidos:
+            cliente = pedido.cliente
+            cid = str(cliente.id)
+
+            if cid not in clientes_dict:
+                clientes_dict[cid] = MapaClienteGrupo(
+                    cliente_id=cliente.id,
+                    cliente_nome=cliente.nome,
+                    cliente_endereco=cliente.endereco if hasattr(cliente, "endereco") else None,
+                    cliente_observacoes=cliente.observacoes if hasattr(cliente, "observacoes") else None,
+                    pedidos=[],
+                )
+
+            itens_detalhe: list[MapaItemDetalhe] = []
+            for item in sorted(pedido.itens, key=lambda i: i.id):
+                composicao = [
+                    MapaComposicaoItem(
+                        ingrediente_nome=c.ingrediente_nome_snap,
+                        quantidade_g=Decimal(str(c.quantidade_g)),
+                    )
+                    for c in sorted(item.composicao, key=lambda c: c.ingrediente_nome_snap)
+                ]
+                itens_detalhe.append(
+                    MapaItemDetalhe(
+                        nome_snapshot=item.nome_snapshot,
+                        tipo_refeicao=item.tipo_refeicao,
+                        tipo=item.tipo,
+                        quantidade=item.quantidade,
+                        embalagem_nome=item.embalagem_nome_snapshot,
+                        composicao=composicao,
+                    )
+                )
+                total_itens += item.quantidade
+
+            clientes_dict[cid].pedidos.append(
+                MapaPedidoDetalhe(
+                    pedido_id=pedido.id,
+                    pedido_numero=pedido.numero,
+                    data_entrega_prevista=pedido.data_entrega_prevista,
+                    observacoes=pedido.observacoes,
+                    itens=itens_detalhe,
+                )
+            )
+
+        clientes = list(clientes_dict.values())
+
+        return MapaMontagemResponse(
+            periodo_inicio=data_inicio,
+            periodo_fim=data_fim,
+            total_clientes=len(clientes),
+            total_pedidos=len(pedidos),
+            total_itens=total_itens,
+            clientes=clientes,
         )

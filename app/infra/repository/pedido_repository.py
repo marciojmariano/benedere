@@ -160,6 +160,33 @@ class PedidoRepository:
         result = await self._session.execute(query)
         return result.all()
 
+    async def mapa_montagem(
+        self,
+        data_inicio: date,
+        data_fim: date,
+        status_list: list[StatusPedido] | None = None,
+        filtro_data: Literal["entrega", "criacao"] = "entrega",
+    ) -> list[Pedido]:
+        """Retorna pedidos com cliente + itens + composição para o mapa de montagem."""
+        if status_list is None:
+            status_list = [StatusPedido.APROVADO, StatusPedido.EM_PRODUCAO]
+
+        campo_data = Pedido.data_entrega_prevista if filtro_data == "entrega" else Pedido.created_at
+
+        query = (
+            self._base_query()
+            .options(
+                selectinload(Pedido.cliente),
+                selectinload(Pedido.itens).selectinload(PedidoItem.composicao),
+            )
+            .where(Pedido.status.in_(status_list))
+            .where(campo_data >= data_inicio)
+            .where(campo_data <= data_fim)
+            .order_by(Pedido.data_entrega_prevista.asc().nulls_last(), Pedido.numero)
+        )
+        result = await self._session.execute(query)
+        return list(result.scalars().all())
+
     async def get_next_numero(self) -> str:
         """Gera o próximo número sequencial: PED-2026-0001."""
         from datetime import datetime

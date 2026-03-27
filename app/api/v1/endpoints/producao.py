@@ -8,7 +8,7 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.schemas.producao import ExplosaoProducaoResponse
+from app.api.v1.schemas.producao import ExplosaoProducaoResponse, MapaMontagemResponse
 from app.core.auth0 import get_tenant_id
 from app.domain.services.producao_service import ProducaoService
 from app.infra.database.models.base import StatusPedido
@@ -48,6 +48,29 @@ async def explosao_producao(
     service: ProducaoService = Depends(get_producao_service),
 ):
     return await service.gerar_explosao(
+        data_inicio=data_inicio,
+        data_fim=data_fim,
+        status_list=status,
+        filtro_data=filtro_data,
+    )
+
+
+@router.get(
+    "/mapa-montagem",
+    response_model=MapaMontagemResponse,
+    summary="Mapa de Montagem — detalhamento por cliente/pedido/marmita",
+)
+async def mapa_montagem(
+    data_inicio: date = Query(..., description="Data inicial do período (YYYY-MM-DD)"),
+    data_fim: date = Query(..., description="Data final do período (YYYY-MM-DD)"),
+    status: Annotated[list[StatusPedido], Query()] = [StatusPedido.APROVADO, StatusPedido.EM_PRODUCAO],
+    filtro_data: Literal["entrega", "criacao"] = Query(
+        default="entrega",
+        description="Campo de data usado no filtro: 'entrega' (data_entrega_prevista) ou 'criacao' (created_at)",
+    ),
+    service: ProducaoService = Depends(get_producao_service),
+):
+    return await service.gerar_mapa_montagem(
         data_inicio=data_inicio,
         data_fim=data_fim,
         status_list=status,
