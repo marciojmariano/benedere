@@ -120,6 +120,32 @@ class TenantService:
         tenant.updated_at = datetime.utcnow()
         return await self._repo.update(tenant)
 
+    async def atualizar_etiqueta(
+        self,
+        tenant_id: uuid.UUID,
+        template_delta: dict | None = None,
+        html_output: str | None = None,
+        largura_mm: int | None = None,
+        altura_mm: int | None = None,
+    ) -> Tenant:
+        """Atualiza o template de etiqueta do tenant."""
+        tenant = await self.buscar_por_id(tenant_id)
+
+        if not tenant.ativo:
+            raise TenantInativoError()
+
+        if template_delta is not None:
+            tenant.etiqueta_template_delta = template_delta
+        if html_output is not None:
+            tenant.etiqueta_html_output = html_output
+        if largura_mm is not None:
+            tenant.etiqueta_largura_mm = largura_mm
+        if altura_mm is not None:
+            tenant.etiqueta_altura_mm = altura_mm
+
+        tenant.updated_at = datetime.utcnow()
+        return await self._repo.update(tenant)
+
     async def desativar(self, tenant_id: uuid.UUID) -> None:
         """Soft delete — preserva histórico."""
         tenant = await self.buscar_por_id(tenant_id)

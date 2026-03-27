@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.schemas.tenant import (
+    LabelSettingsUpdateRequest,
     TenantCreateRequest,
     TenantDetailResponse,
     TenantResponse,
@@ -20,6 +21,7 @@ from app.domain.services.tenant_service import (
     TenantSlugJaExisteError,
     TenantInativoError,
 )
+from app.core.auth0 import get_tenant_id
 from app.infra.database.models.base import TenantPlano
 from app.infra.database.session import get_session
 from app.infra.repository.tenant_repository import TenantRepository
@@ -73,6 +75,45 @@ async def listar_tenants(
     service: TenantService = Depends(get_tenant_service),
 ):
     return await service.listar(apenas_ativos=apenas_ativos)
+
+
+@router.get(
+    "/label-settings",
+    response_model=TenantDetailResponse,
+    summary="Obter configuração de etiqueta do tenant autenticado",
+)
+async def obter_label_settings(
+    tenant_id: str = Depends(get_tenant_id),
+    service: TenantService = Depends(get_tenant_service),
+):
+    try:
+        return await service.buscar_por_id(uuid.UUID(tenant_id))
+    except TenantNaoEncontradoError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.patch(
+    "/label-settings",
+    response_model=TenantDetailResponse,
+    summary="Atualizar template de etiqueta do tenant autenticado",
+)
+async def atualizar_label_settings(
+    body: LabelSettingsUpdateRequest,
+    tenant_id: str = Depends(get_tenant_id),
+    service: TenantService = Depends(get_tenant_service),
+):
+    try:
+        return await service.atualizar_etiqueta(
+            tenant_id=uuid.UUID(tenant_id),
+            template_delta=body.template_delta,
+            html_output=body.html_output,
+            largura_mm=body.dimensions.w if body.dimensions else None,
+            altura_mm=body.dimensions.h if body.dimensions else None,
+        )
+    except TenantNaoEncontradoError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except TenantInativoError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.get(

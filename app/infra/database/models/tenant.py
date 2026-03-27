@@ -1,7 +1,7 @@
 """Model: Tenant — raiz do multi-tenancy."""
 import uuid
-from sqlalchemy import Boolean, Enum, ForeignKey, Integer, String
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Boolean, Enum, ForeignKey, Integer, String, Text
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 from app.infra.database.models.base import Base, EstrategiaCusto, TimestampMixin, TenantPlano, TenantStatus
 
@@ -35,4 +35,18 @@ class Tenant(Base, TimestampMixin):
     )
     periodo_dias_custo_medio_padrao: Mapped[int | None] = mapped_column(
         Integer, nullable=True, default=30
+    )
+
+    # ── Template de etiqueta por tenant ──────────────────────────────────────
+    etiqueta_template_delta: Mapped[dict | None] = mapped_column(
+        JSONB, nullable=True, default=None
+    )
+    etiqueta_html_output: Mapped[str | None] = mapped_column(
+        Text, nullable=True, default=None
+    )
+    etiqueta_largura_mm: Mapped[int | None] = mapped_column(
+        Integer, nullable=True, default=100
+    )
+    etiqueta_altura_mm: Mapped[int | None] = mapped_column(
+        Integer, nullable=True, default=60
     )
