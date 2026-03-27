@@ -2,11 +2,11 @@
 import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, Enum, Numeric, String, Text
+from sqlalchemy import Boolean, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.infra.database.models.base import Base, TenantScoped, TipoRefeicao
+from app.infra.database.models.base import Base, TenantScoped
 
 if TYPE_CHECKING:
     from app.infra.database.models.produto_composicao import ProdutoComposicao
@@ -24,9 +24,6 @@ class Produto(Base, TenantScoped):
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
     nome: Mapped[str] = mapped_column(String(255), nullable=False)
-    tipo_refeicao: Mapped[TipoRefeicao | None] = mapped_column(
-        Enum(TipoRefeicao), nullable=True
-    )
     peso_total_g: Mapped[float] = mapped_column(
         Numeric(10, 2), nullable=False, default=0
     )

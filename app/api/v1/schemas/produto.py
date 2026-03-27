@@ -8,8 +8,6 @@ from decimal import Decimal
 
 from pydantic import BaseModel, field_validator
 
-from app.infra.database.models.base import TipoRefeicao
-
 
 # ── Composição (sub-schemas) ─────────────────────────────────────────────────
 
@@ -46,7 +44,6 @@ class ProdutoComposicaoResponse(BaseModel):
 
 class ProdutoCreateRequest(BaseModel):
     nome: str
-    tipo_refeicao: TipoRefeicao | None = None
     descricao: str | None = None
     # Composição pode ser enviada junto na criação
     composicao: list[ProdutoComposicaoCreateRequest] | None = None
@@ -64,7 +61,6 @@ class ProdutoCreateRequest(BaseModel):
 
 class ProdutoUpdateRequest(BaseModel):
     nome: str | None = None
-    tipo_refeicao: TipoRefeicao | None = None
     descricao: str | None = None
 
     @field_validator("nome")
@@ -83,7 +79,6 @@ class ProdutoUpdateRequest(BaseModel):
 class ProdutoResponse(BaseModel):
     id: uuid.UUID
     nome: str
-    tipo_refeicao: TipoRefeicao | None
     peso_total_g: Decimal
     descricao: str | None
     ativo: bool

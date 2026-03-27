@@ -371,8 +371,8 @@ class PedidoService:
             )
             custo_total += custo_item
 
-        # tipo_refeicao: usa override se fornecido, senão herda do catálogo
-        tipo_refeicao = tipo_refeicao_override or produto.tipo_refeicao
+        # tipo_refeicao: usa override fornecido no pedido (produto não carrega mais este campo)
+        tipo_refeicao = tipo_refeicao_override
 
         # Resolve embalagem pelo peso total dos ingredientes
         peso_total_g = sum(float(c.quantidade_g) for c in composicao_snapshot)
