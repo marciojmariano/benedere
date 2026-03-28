@@ -52,10 +52,16 @@ class LabelDimensionsSchema(BaseModel):
     h: int = Field(ge=20, le=300, description="Altura em mm")
 
 
+class LabelOffsetSchema(BaseModel):
+    x: int = Field(ge=-20, le=20, description="Offset horizontal em mm")
+    y: int = Field(ge=-20, le=20, description="Offset vertical em mm")
+
+
 class LabelSettingsUpdateRequest(BaseModel):
     template_delta: Any | None = None
     html_output: str | None = None
     dimensions: LabelDimensionsSchema | None = None
+    offset: LabelOffsetSchema | None = None
 
     @field_validator("html_output")
     @classmethod
@@ -114,3 +120,5 @@ class TenantDetailResponse(TenantResponse):
     etiqueta_html_output: str | None = None
     etiqueta_largura_mm: int | None = None
     etiqueta_altura_mm: int | None = None
+    etiqueta_offset_x_mm: int = 0
+    etiqueta_offset_y_mm: int = 0

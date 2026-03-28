@@ -109,6 +109,8 @@ async def atualizar_label_settings(
             html_output=body.html_output,
             largura_mm=body.dimensions.w if body.dimensions else None,
             altura_mm=body.dimensions.h if body.dimensions else None,
+            offset_x_mm=body.offset.x if body.offset else None,
+            offset_y_mm=body.offset.y if body.offset else None,
         )
     except TenantNaoEncontradoError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

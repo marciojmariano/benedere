@@ -8,6 +8,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.schemas.pedido import (
+    BulkLabelDataRequest,
+    BulkLabelItemResponse,
+    MarcarImpressasRequest,
     PedidoCreateRequest,
     PedidoUpdateRequest,
     PedidoDetalheResponse,
@@ -286,6 +289,31 @@ async def atualizar_item(
         _handle_not_found(e)
     except (IngredienteNaoEncontradoError, ComposicaoVaziaError) as e:
         _handle_bad_request(e)
+
+
+@router.post(
+    "/bulk-label-data",
+    response_model=list[BulkLabelItemResponse],
+    summary="Retorna dados de etiqueta para impressão em lote",
+)
+async def bulk_label_data(
+    body: BulkLabelDataRequest,
+    service: PedidoService = Depends(get_pedido_service),
+):
+    items = await service.bulk_label_data(body.pedido_ids)
+    return [BulkLabelItemResponse(**item) for item in items]
+
+
+@router.patch(
+    "/marcar-impressas",
+    summary="Marca itens como etiqueta impressa",
+)
+async def marcar_impressas(
+    body: MarcarImpressasRequest,
+    service: PedidoService = Depends(get_pedido_service),
+):
+    count = await service.marcar_impressas(body.item_ids)
+    return {"marcados": count}
 
 
 @router.delete(

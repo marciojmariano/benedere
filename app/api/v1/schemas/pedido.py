@@ -85,6 +85,7 @@ class PedidoItemResponse(BaseModel):
     quantidade: int
     preco_unitario: Decimal
     preco_total: Decimal
+    etiqueta_impressa: bool = False
     composicao: list[PedidoItemComposicaoResponse] = []
     embalagem_ingrediente_id: uuid.UUID | None = None
     embalagem_nome_snapshot: str | None = None
@@ -143,3 +144,32 @@ class PedidoResumo(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+# ── Impressão de etiquetas em lote ───────────────────────────────────────────
+
+class IngredienteEtiquetaSchema(BaseModel):
+    nome: str
+    peso_g: float
+
+
+class BulkLabelItemResponse(BaseModel):
+    """Dados de uma etiqueta pronta para impressão (um por PedidoItem)."""
+    item_id: uuid.UUID
+    pedido_numero: str
+    cliente_nome: str
+    tipo_refeicao: str | None
+    data_fabricacao: str
+    data_validade: str
+    empresa_nome: str
+    empresa_cnpj: str
+    ingredientes: list[IngredienteEtiquetaSchema]
+    etiqueta_impressa: bool
+
+
+class BulkLabelDataRequest(BaseModel):
+    pedido_ids: list[uuid.UUID]
+
+
+class MarcarImpressasRequest(BaseModel):
+    item_ids: list[uuid.UUID]

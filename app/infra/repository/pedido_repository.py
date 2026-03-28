@@ -6,7 +6,7 @@ import uuid
 from datetime import date
 from typing import Literal
 
-from sqlalchemy import func, null, select
+from sqlalchemy import func, null, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -186,6 +186,32 @@ class PedidoRepository:
         )
         result = await self._session.execute(query)
         return list(result.scalars().all())
+
+    async def get_by_ids(self, pedido_ids: list[uuid.UUID]) -> list[Pedido]:
+        """Carrega múltiplos pedidos por ID com cliente + itens + composição."""
+        query = (
+            self._base_query()
+            .where(Pedido.id.in_(pedido_ids))
+            .options(
+                selectinload(Pedido.cliente),
+                selectinload(Pedido.itens).selectinload(PedidoItem.composicao),
+            )
+        )
+        result = await self._session.execute(query)
+        return list(result.scalars().all())
+
+    async def marcar_itens_impressos(self, item_ids: list[uuid.UUID]) -> int:
+        """Marca os PedidoItems informados como etiqueta_impressa=True.
+        Retorna o número de linhas afetadas."""
+        stmt = (
+            update(PedidoItem)
+            .where(PedidoItem.id.in_(item_ids))
+            .values(etiqueta_impressa=True)
+            .execution_options(synchronize_session="fetch")
+        )
+        result = await self._session.execute(stmt)
+        await self._session.flush()
+        return result.rowcount
 
     async def get_next_numero(self) -> str:
         """Gera o próximo número sequencial: PED-2026-0001."""

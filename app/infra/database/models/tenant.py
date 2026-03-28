@@ -50,3 +50,5 @@ class Tenant(Base, TimestampMixin):
     etiqueta_altura_mm: Mapped[int | None] = mapped_column(
         Integer, nullable=True, default=60
     )
+    etiqueta_offset_x_mm: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    etiqueta_offset_y_mm: Mapped[int] = mapped_column(Integer, nullable=False, default=0)

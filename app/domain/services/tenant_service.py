@@ -127,6 +127,8 @@ class TenantService:
         html_output: str | None = None,
         largura_mm: int | None = None,
         altura_mm: int | None = None,
+        offset_x_mm: int | None = None,
+        offset_y_mm: int | None = None,
     ) -> Tenant:
         """Atualiza o template de etiqueta do tenant."""
         tenant = await self.buscar_por_id(tenant_id)
@@ -142,6 +144,10 @@ class TenantService:
             tenant.etiqueta_largura_mm = largura_mm
         if altura_mm is not None:
             tenant.etiqueta_altura_mm = altura_mm
+        if offset_x_mm is not None:
+            tenant.etiqueta_offset_x_mm = offset_x_mm
+        if offset_y_mm is not None:
+            tenant.etiqueta_offset_y_mm = offset_y_mm
 
         tenant.updated_at = datetime.utcnow()
         return await self._repo.update(tenant)

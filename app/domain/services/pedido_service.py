@@ -531,6 +531,54 @@ class PedidoService:
             pedido_atualizado.updated_at = datetime.utcnow()
             await self._pedido_repo.update(pedido_atualizado)
 
+    # ── Impressão de etiquetas em lote ───────────────────────────────────────
+
+    async def bulk_label_data(self, pedido_ids: list[uuid.UUID]) -> list[dict]:
+        """Retorna dados de etiqueta para cada item dos pedidos informados."""
+        from datetime import date, timedelta
+
+        pedidos = await self._pedido_repo.get_by_ids(pedido_ids)
+        tenant = await self._tenant_repo.get_by_id(self._tenant_id)
+        empresa_nome = tenant.nome if tenant else ""
+        empresa_cnpj = ""  # CNPJ não está no modelo atual
+
+        TIPO_REFEICAO_LABEL = {
+            "CAFE_MANHA": "Café da Manhã",
+            "LANCHE_MANHA": "Lanche Manhã",
+            "ALMOCO": "Almoço",
+            "LANCHE_TARDE": "Lanche Tarde",
+            "JANTAR": "Jantar",
+        }
+
+        hoje = date.today()
+        items_data: list[dict] = []
+        for pedido in pedidos:
+            cliente_nome = pedido.cliente.nome if pedido.cliente else ""
+            for item in pedido.itens:
+                ingredientes = [
+                    {"nome": c.ingrediente_nome_snap, "peso_g": float(c.quantidade_g)}
+                    for c in item.composicao
+                ]
+                items_data.append({
+                    "item_id": item.id,
+                    "pedido_numero": pedido.numero,
+                    "cliente_nome": cliente_nome,
+                    "tipo_refeicao": TIPO_REFEICAO_LABEL.get(
+                        item.tipo_refeicao.value if item.tipo_refeicao else "", None
+                    ),
+                    "data_fabricacao": hoje.strftime("%d/%m/%Y"),
+                    "data_validade": (hoje + timedelta(days=3)).strftime("%d/%m/%Y"),
+                    "empresa_nome": empresa_nome,
+                    "empresa_cnpj": empresa_cnpj,
+                    "ingredientes": ingredientes,
+                    "etiqueta_impressa": item.etiqueta_impressa,
+                })
+        return items_data
+
+    async def marcar_impressas(self, item_ids: list[uuid.UUID]) -> int:
+        """Marca os itens informados como etiqueta_impressa=True."""
+        return await self._pedido_repo.marcar_itens_impressos(item_ids)
+
     def _validar_editavel(self, pedido: Pedido) -> None:
         if pedido.status not in (StatusPedido.RASCUNHO, StatusPedido.APROVADO):
             raise PedidoNaoEditavelError()

@@ -2,7 +2,7 @@
 import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Enum, ForeignKey, Integer, Numeric, String
+from sqlalchemy import Boolean, Enum, ForeignKey, Integer, Numeric, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -53,6 +53,8 @@ class PedidoItem(Base):
     preco_total: Mapped[float] = mapped_column(
         Numeric(10, 2), nullable=False, default=0
     )
+
+    etiqueta_impressa: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     # ── Embalagem (auto-selecionada por faixa de peso) ────────────────────────
     embalagem_ingrediente_id: Mapped[uuid.UUID | None] = mapped_column(
