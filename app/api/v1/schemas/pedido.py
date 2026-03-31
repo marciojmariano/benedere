@@ -164,7 +164,10 @@ class BulkLabelItemResponse(BaseModel):
     empresa_nome: str
     empresa_cnpj: str
     ingredientes: list[IngredienteEtiquetaSchema]
+    ingredientes_html: str = ""
     etiqueta_impressa: bool
+    copia: int = 1
+    total_copias: int = 1
 
 
 class BulkLabelDataRequest(BaseModel):

@@ -533,6 +533,30 @@ class PedidoService:
 
     # ── Impressão de etiquetas em lote ───────────────────────────────────────
 
+    @staticmethod
+    def _build_ingredientes_html(ingredientes: list[dict]) -> str:
+        """Gera o fragmento HTML da tabela de ingredientes para impressão de etiqueta."""
+        import html as html_lib
+        rows = "".join(
+            f"<tr>"
+            f"<td>{html_lib.escape(str(i['nome']))}</td>"
+            f"<td style=\"text-align:right\">{i['peso_g']}g</td>"
+            f"</tr>"
+            for i in ingredientes
+        )
+        total = sum(i["peso_g"] for i in ingredientes)
+        return (
+            '<table class="ingredientes-table" style="width:100%;border-collapse:collapse;font-size:2.2mm">'
+            f"<tbody>{rows}</tbody>"
+            "<tfoot>"
+            "<tr>"
+            '<td style="border-top:1px solid #18181b"><strong>Total</strong></td>'
+            f'<td style="text-align:right;border-top:1px solid #18181b"><strong>{total}g</strong></td>'
+            "</tr>"
+            "</tfoot>"
+            "</table>"
+        )
+
     async def bulk_label_data(self, pedido_ids: list[uuid.UUID]) -> list[dict]:
         """Retorna dados de etiqueta para cada item dos pedidos informados."""
         from datetime import date, timedelta
@@ -559,20 +583,25 @@ class PedidoService:
                     {"nome": c.ingrediente_nome_snap, "peso_g": float(c.quantidade_g)}
                     for c in item.composicao
                 ]
-                items_data.append({
-                    "item_id": item.id,
-                    "pedido_numero": pedido.numero,
-                    "cliente_nome": cliente_nome,
-                    "tipo_refeicao": TIPO_REFEICAO_LABEL.get(
-                        item.tipo_refeicao.value if item.tipo_refeicao else "", None
-                    ),
-                    "data_fabricacao": hoje.strftime("%d/%m/%Y"),
-                    "data_validade": (hoje + timedelta(days=3)).strftime("%d/%m/%Y"),
-                    "empresa_nome": empresa_nome,
-                    "empresa_cnpj": empresa_cnpj,
-                    "ingredientes": ingredientes,
-                    "etiqueta_impressa": item.etiqueta_impressa,
-                })
+                ingredientes_html = self._build_ingredientes_html(ingredientes)
+                for copia in range(1, item.quantidade + 1):
+                    items_data.append({
+                        "item_id": item.id,
+                        "pedido_numero": pedido.numero,
+                        "cliente_nome": cliente_nome,
+                        "tipo_refeicao": TIPO_REFEICAO_LABEL.get(
+                            item.tipo_refeicao.value if item.tipo_refeicao else "", None
+                        ),
+                        "data_fabricacao": hoje.strftime("%d/%m/%Y"),
+                        "data_validade": (hoje + timedelta(days=3)).strftime("%d/%m/%Y"),
+                        "empresa_nome": empresa_nome,
+                        "empresa_cnpj": empresa_cnpj,
+                        "ingredientes": ingredientes,
+                        "ingredientes_html": ingredientes_html,
+                        "etiqueta_impressa": item.etiqueta_impressa,
+                        "copia": copia,
+                        "total_copias": item.quantidade,
+                    })
         return items_data
 
     async def marcar_impressas(self, item_ids: list[uuid.UUID]) -> int:
