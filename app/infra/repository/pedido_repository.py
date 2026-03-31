@@ -6,7 +6,7 @@ import uuid
 from datetime import date
 from typing import Literal
 
-from sqlalchemy import func, null, select, update
+from sqlalchemy import and_, func, null, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -26,6 +26,18 @@ class PedidoRepository:
 
     def _base_query(self):
         return select(Pedido).where(Pedido.tenant_id == self._tenant_id)
+
+    def _date_filter(self, filtro_data: str, data_inicio: date, data_fim: date):
+        """Filtro de data que inclui pedidos sem data_entrega_prevista quando filtro=entrega."""
+        if filtro_data == "entrega":
+            return or_(
+                and_(
+                    Pedido.data_entrega_prevista >= data_inicio,
+                    Pedido.data_entrega_prevista <= data_fim,
+                ),
+                Pedido.data_entrega_prevista.is_(None),
+            )
+        return and_(Pedido.created_at >= data_inicio, Pedido.created_at <= data_fim)
 
     def _eager_options(self):
         """Carrega itens e composição em cascade."""
@@ -52,7 +64,7 @@ class PedidoRepository:
         status: StatusPedido | None = None,
         cliente_id: uuid.UUID | None = None,
     ) -> list[Pedido]:
-        query = self._base_query().options(selectinload(Pedido.itens))
+        query = self._base_query().options(selectinload(Pedido.cliente), selectinload(Pedido.itens))
         if status:
             query = query.where(Pedido.status == status)
         if cliente_id:
@@ -80,8 +92,6 @@ class PedidoRepository:
         """Agrega ingredientes de todos os pedidos do período (BOM explosion)."""
         if status_list is None:
             status_list = [StatusPedido.APROVADO, StatusPedido.EM_PRODUCAO]
-
-        campo_data = Pedido.data_entrega_prevista if filtro_data == "entrega" else Pedido.created_at
 
         qtd_total = func.sum(
             PedidoItemComposicao.quantidade_g * PedidoItem.quantidade
@@ -113,8 +123,7 @@ class PedidoRepository:
             .outerjoin(Ingrediente, Ingrediente.id == PedidoItemComposicao.ingrediente_id)
             .where(Pedido.tenant_id == self._tenant_id)
             .where(Pedido.status.in_(status_list))
-            .where(campo_data >= data_inicio)
-            .where(campo_data <= data_fim)
+            .where(self._date_filter(filtro_data, data_inicio, data_fim))
             .group_by(
                 PedidoItemComposicao.ingrediente_id,
                 PedidoItemComposicao.ingrediente_nome_snap,
@@ -138,8 +147,6 @@ class PedidoRepository:
         if status_list is None:
             status_list = [StatusPedido.APROVADO, StatusPedido.EM_PRODUCAO]
 
-        campo_data = Pedido.data_entrega_prevista if filtro_data == "entrega" else Pedido.created_at
-
         query = (
             select(
                 Pedido.id,
@@ -152,8 +159,7 @@ class PedidoRepository:
             .outerjoin(PedidoItem, PedidoItem.pedido_id == Pedido.id)
             .where(Pedido.tenant_id == self._tenant_id)
             .where(Pedido.status.in_(status_list))
-            .where(campo_data >= data_inicio)
-            .where(campo_data <= data_fim)
+            .where(self._date_filter(filtro_data, data_inicio, data_fim))
             .group_by(Pedido.id, Pedido.numero, Cliente.nome, Pedido.data_entrega_prevista)
             .order_by(Pedido.data_entrega_prevista.asc().nulls_last(), Pedido.numero)
         )
@@ -171,8 +177,6 @@ class PedidoRepository:
         if status_list is None:
             status_list = [StatusPedido.APROVADO, StatusPedido.EM_PRODUCAO]
 
-        campo_data = Pedido.data_entrega_prevista if filtro_data == "entrega" else Pedido.created_at
-
         query = (
             self._base_query()
             .options(
@@ -180,8 +184,7 @@ class PedidoRepository:
                 selectinload(Pedido.itens).selectinload(PedidoItem.composicao),
             )
             .where(Pedido.status.in_(status_list))
-            .where(campo_data >= data_inicio)
-            .where(campo_data <= data_fim)
+            .where(self._date_filter(filtro_data, data_inicio, data_fim))
             .order_by(Pedido.data_entrega_prevista.asc().nulls_last(), Pedido.numero)
         )
         result = await self._session.execute(query)
