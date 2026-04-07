@@ -42,7 +42,7 @@ class MovimentacaoEstoqueRepository:
     async def list_by_ingrediente(
         self,
         ingrediente_id: uuid.UUID,
-        limit: int = 50,
+        limit: int = 5000,
         offset: int = 0,
     ) -> list[MovimentacaoEstoque]:
         result = await self._session.execute(
@@ -55,7 +55,7 @@ class MovimentacaoEstoqueRepository:
         )
         return list(result.scalars().all())
 
-    async def list_all(self, limit: int = 50, offset: int = 0) -> list[MovimentacaoEstoque]:
+    async def list_all(self, limit: int = 5000, offset: int = 0) -> list[MovimentacaoEstoque]:
         result = await self._session.execute(
             self._base_query()
             .options(selectinload(MovimentacaoEstoque.ingrediente))

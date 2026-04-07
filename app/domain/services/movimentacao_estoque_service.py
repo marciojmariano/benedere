@@ -86,13 +86,13 @@ class MovimentacaoEstoqueService:
             raise MovimentacaoNaoEncontradaError(mov_id)
         return mov
 
-    async def listar_todas(self, limit: int = 50, offset: int = 0) -> list[MovimentacaoEstoque]:
+    async def listar_todas(self, limit: int = 5000, offset: int = 0) -> list[MovimentacaoEstoque]:
         return await self._mov_repo.list_all(limit=limit, offset=offset)
 
     async def listar_por_ingrediente(
         self,
         ingrediente_id: uuid.UUID,
-        limit: int = 50,
+        limit: int = 5000,
         offset: int = 0,
     ) -> list[MovimentacaoEstoque]:
         return await self._mov_repo.list_by_ingrediente(

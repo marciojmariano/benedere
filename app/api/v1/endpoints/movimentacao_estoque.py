@@ -72,7 +72,7 @@ async def registrar_entrada(
     summary="Listar todas as movimentações",
 )
 async def listar_movimentacoes(
-    limit: int = Query(50, ge=1, le=200),
+    limit: int = Query(5000, ge=1, le=5000),
     offset: int = Query(0, ge=0),
     service: MovimentacaoEstoqueService = Depends(get_movimentacao_service),
 ):
@@ -103,7 +103,7 @@ async def buscar_movimentacao(
 )
 async def listar_por_ingrediente(
     ingrediente_id: uuid.UUID,
-    limit: int = Query(50, ge=1, le=200),
+    limit: int = Query(5000, ge=1, le=5000),
     offset: int = Query(0, ge=0),
     service: MovimentacaoEstoqueService = Depends(get_movimentacao_service),
 ):
