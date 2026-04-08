@@ -116,6 +116,7 @@ async def listar_pedidos(
             id=p.id,
             numero=p.numero,
             cliente_id=p.cliente_id,
+            cliente_nome=p.cliente.nome if p.cliente else "",
             status=p.status,
             valor_total=p.valor_total,
             total_itens=len(p.itens),

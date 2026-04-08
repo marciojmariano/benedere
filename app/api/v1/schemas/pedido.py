@@ -137,6 +137,7 @@ class PedidoResumo(BaseModel):
     id: uuid.UUID
     numero: str
     cliente_id: uuid.UUID
+    cliente_nome: str = ""
     status: StatusPedido
     valor_total: Decimal
     total_itens: int = 0

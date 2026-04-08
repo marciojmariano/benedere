@@ -52,7 +52,10 @@ class PedidoRepository:
         status: StatusPedido | None = None,
         cliente_id: uuid.UUID | None = None,
     ) -> list[Pedido]:
-        query = self._base_query().options(selectinload(Pedido.itens))
+        query = self._base_query().options(
+            selectinload(Pedido.itens),
+            selectinload(Pedido.cliente),
+        )
         if status:
             query = query.where(Pedido.status == status)
         if cliente_id:
