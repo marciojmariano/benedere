@@ -84,7 +84,11 @@ class PedidoRepository:
         if status_list is None:
             status_list = [StatusPedido.APROVADO, StatusPedido.EM_PRODUCAO]
 
-        campo_data = Pedido.data_entrega_prevista if filtro_data == "entrega" else Pedido.created_at
+        campo_data = (
+            func.coalesce(Pedido.data_entrega_prevista, Pedido.created_at)
+            if filtro_data == "entrega"
+            else Pedido.created_at
+        )
 
         qtd_total = func.sum(
             PedidoItemComposicao.quantidade_g * PedidoItem.quantidade
@@ -141,7 +145,11 @@ class PedidoRepository:
         if status_list is None:
             status_list = [StatusPedido.APROVADO, StatusPedido.EM_PRODUCAO]
 
-        campo_data = Pedido.data_entrega_prevista if filtro_data == "entrega" else Pedido.created_at
+        campo_data = (
+            func.coalesce(Pedido.data_entrega_prevista, Pedido.created_at)
+            if filtro_data == "entrega"
+            else Pedido.created_at
+        )
 
         query = (
             select(
@@ -174,7 +182,11 @@ class PedidoRepository:
         if status_list is None:
             status_list = [StatusPedido.APROVADO, StatusPedido.EM_PRODUCAO]
 
-        campo_data = Pedido.data_entrega_prevista if filtro_data == "entrega" else Pedido.created_at
+        campo_data = (
+            func.coalesce(Pedido.data_entrega_prevista, Pedido.created_at)
+            if filtro_data == "entrega"
+            else Pedido.created_at
+        )
 
         query = (
             self._base_query()
