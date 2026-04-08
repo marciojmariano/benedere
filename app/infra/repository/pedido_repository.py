@@ -6,7 +6,7 @@ import uuid
 from datetime import date
 from typing import Literal
 
-from sqlalchemy import Date as SADate, func, null, select
+from sqlalchemy import Date as SADate, cast, func, null, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -84,7 +84,7 @@ class PedidoRepository:
         if status_list is None:
             status_list = [StatusPedido.APROVADO, StatusPedido.EM_PRODUCAO]
 
-        campo_data = func.cast(
+        campo_data = cast(
             func.coalesce(Pedido.data_entrega_prevista, Pedido.created_at)
             if filtro_data == "entrega"
             else Pedido.created_at,
@@ -146,7 +146,7 @@ class PedidoRepository:
         if status_list is None:
             status_list = [StatusPedido.APROVADO, StatusPedido.EM_PRODUCAO]
 
-        campo_data = func.cast(
+        campo_data = cast(
             func.coalesce(Pedido.data_entrega_prevista, Pedido.created_at)
             if filtro_data == "entrega"
             else Pedido.created_at,
@@ -184,7 +184,7 @@ class PedidoRepository:
         if status_list is None:
             status_list = [StatusPedido.APROVADO, StatusPedido.EM_PRODUCAO]
 
-        campo_data = func.cast(
+        campo_data = cast(
             func.coalesce(Pedido.data_entrega_prevista, Pedido.created_at)
             if filtro_data == "entrega"
             else Pedido.created_at,
