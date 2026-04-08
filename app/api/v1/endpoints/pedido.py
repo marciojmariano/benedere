@@ -120,6 +120,7 @@ async def listar_pedidos(
             status=p.status,
             valor_total=p.valor_total,
             total_itens=len(p.itens),
+            data_entrega_prevista=p.data_entrega_prevista,
             created_at=p.created_at,
         )
         for p in pedidos

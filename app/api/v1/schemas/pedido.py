@@ -3,7 +3,7 @@ Schemas Pydantic — Pedido, PedidoItem, PedidoItemComposicao
 Tasks: 3.1.2, 3.2.2, 3.3.1
 """
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 
 from pydantic import BaseModel, field_validator
@@ -101,10 +101,24 @@ class PedidoCreateRequest(BaseModel):
     observacoes: str | None = None
     data_entrega_prevista: datetime | None = None
 
+    @field_validator("data_entrega_prevista")
+    @classmethod
+    def validate_data_entrega_nao_retroativa(cls, v: datetime | None) -> datetime | None:
+        if v is not None and v < datetime.now(timezone.utc):
+            raise ValueError("Data de entrega prevista não pode ser no passado")
+        return v
+
 
 class PedidoUpdateRequest(BaseModel):
     observacoes: str | None = None
     data_entrega_prevista: datetime | None = None
+
+    @field_validator("data_entrega_prevista")
+    @classmethod
+    def validate_data_entrega_nao_retroativa(cls, v: datetime | None) -> datetime | None:
+        if v is not None and v < datetime.now(timezone.utc):
+            raise ValueError("Data de entrega prevista não pode ser no passado")
+        return v
 
 
 class StatusUpdateRequest(BaseModel):
@@ -141,6 +155,7 @@ class PedidoResumo(BaseModel):
     status: StatusPedido
     valor_total: Decimal
     total_itens: int = 0
+    data_entrega_prevista: datetime | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}

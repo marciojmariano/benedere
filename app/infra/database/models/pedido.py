@@ -47,10 +47,10 @@ class Pedido(Base, TenantScoped):
     observacoes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     data_entrega_prevista: Mapped[datetime | None] = mapped_column(
-        DateTime, nullable=True
+        DateTime(timezone=True), nullable=True
     )
     data_entrega_realizada: Mapped[datetime | None] = mapped_column(
-        DateTime, nullable=True
+        DateTime(timezone=True), nullable=True
     )
 
     # ── Relacionamentos ──────────────────────────────────────────────────────
