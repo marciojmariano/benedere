@@ -21,18 +21,23 @@ services:
 
   api:
     build:
-      context: .
+      # ANTES: context: . (pegava tudo, até o frontend)
+      # AGORA: foca apenas no diretório do backend
+      context: ./backend
       dockerfile: Dockerfile
     container_name: benedere_api
     restart: unless-stopped
-    env_file: .env
+    # Certifique-se que o .env está dentro de ./backend ou ajuste o caminho abaixo
+    env_file: ./backend/.env
     ports:
       - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
     volumes:
-      - .:/app
+      # Mapeia apenas o código do backend para o container
+      - ./backend:/app
+    # O comando assume que o diretório 'app' está dentro de 'backend'
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 volumes:
